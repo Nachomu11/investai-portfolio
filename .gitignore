@@ -1,0 +1,26 @@
+# Cache y datos locales
+data/notifications.json
+data/portfolios.json
+__pycache__/
+modules/__pycache__/
+*.pyc
+*.pyo
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Secretos
+.env
+.env.local
+secrets.toml
