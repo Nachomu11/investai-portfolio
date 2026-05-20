@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvestAI — Portfolio Intelligence | Proyecto II</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════ DESIGN TOKENS ═══════════════════ */
+:root{
+  --ink:#0d1b2a; --navy:#1b2d40; --navy2:#2c4558;
+  --cream:#f7f3eb; --warm:#ede9e0; --white:#fff;
+  --coral:#c4574a; --coral2:#d97065; --gold:#c9a84c;
+  --green:#2e7d5a; --muted:#6b7280; --border:#ddd8ce;
+  --amber:#c07a28;
+  --s1:0 1px 4px rgba(13,27,42,.07),0 2px 8px rgba(13,27,42,.04);
+  --s2:0 4px 20px rgba(13,27,42,.10),0 1px 5px rgba(13,27,42,.05);
+  --s3:0 14px 44px rgba(13,27,42,.16),0 4px 14px rgba(13,27,42,.08);
+  --ease:cubic-bezier(.4,0,.2,1); --ease-out:cubic-bezier(0,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;
+  background:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* ═══════════════════ PROGRESS BAR ═══════════════════ */
+.progress{position:fixed;top:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--coral),#d4774a,var(--gold));
+  transition:width .5s var(--ease);z-index:500;border-radius:0 2px 2px 0;
+  box-shadow:0 0 10px rgba(196,87,74,.5)}
+
+/* ═══════════════════ TICKER ═══════════════════ */
+.ticker-wrap{position:fixed;bottom:0;left:0;right:0;height:28px;background:var(--ink);
+  border-top:1px solid rgba(255,255,255,.07);overflow:hidden;z-index:200}
+.ticker{display:flex;animation:tick 55s linear infinite;white-space:nowrap;height:100%;align-items:center;width:max-content}
+.ticker span{padding:0 28px;font-size:10px;font-weight:500;letter-spacing:.3px;color:rgba(255,255,255,.28)}
+.ticker span.up{color:#4ade80}.ticker span.dn{color:#f87171}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ═══════════════════ DECK & SLIDES ═══════════════════ */
+.deck{width:100vw;height:calc(100vh - 28px);position:relative;overflow:hidden}
+
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:48px 88px 40px;background:var(--cream);
+  opacity:0;transform:scale(.97) translateY(14px);
+  transition:opacity .52s var(--ease),transform .52s var(--ease);pointer-events:none;
+}
+/* Dot grid on all slides */
+.slide::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(180,165,140,.22) 1px,transparent 1px);
+  background-size:28px 28px;}
+.slide.active{opacity:1;transform:scale(1) translateY(0);pointer-events:all}
+.slide.out{opacity:0;transform:scale(1.02) translateY(-10px)}
+
+/* ═══════════════════ NAVIGATION ═══════════════════ */
+.nav{position:fixed;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,.08);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.14);width:40px;height:40px;border-radius:50%;
+  cursor:pointer;font-size:16px;color:white;display:flex;align-items:center;justify-content:center;
+  transition:all .25s var(--ease);z-index:100;outline:none}
+.nav:hover{background:rgba(255,255,255,.2);transform:translateY(-50%) scale(1.1);border-color:rgba(255,255,255,.28)}
+#prev{left:16px}#next{right:16px}
+.ctr{position:fixed;bottom:34px;left:50%;transform:translateX(-50%);
+  font-size:9.5px;font-weight:600;letter-spacing:2.5px;color:rgba(255,255,255,.22);z-index:100}
+
+/* ═══════════════════ TYPOGRAPHY ═══════════════════ */
+.tag{font-size:9px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;
+  color:var(--coral);margin-bottom:12px;display:block}
+h1.t{font-family:'Playfair Display',serif;font-size:clamp(40px,5.5vw,72px);
+  font-weight:900;line-height:1.04;color:var(--ink);letter-spacing:-.5px}
+h2.t{font-family:'Playfair Display',serif;font-size:clamp(26px,3.5vw,46px);
+  font-weight:700;line-height:1.12;color:var(--ink);letter-spacing:-.3px}
+h3.t{font-family:'Playfair Display',serif;font-size:clamp(16px,2vw,24px);font-weight:700;color:var(--ink)}
+.div{width:40px;height:2px;background:var(--coral);margin:12px 0 22px;border-radius:1px;
+  transform-origin:left;animation:none}
+.slide.active .div{animation:ruleIn .5s var(--ease-out) .12s both}
+@keyframes ruleIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+p{font-size:13.5px;line-height:1.72;color:#374151}
+.lead{font-size:15.5px;line-height:1.65;color:#374151}
+strong{color:var(--ink);font-weight:600}
+
+/* ═══════════════════ CARDS ═══════════════════ */
+.card{background:white;border-radius:14px;padding:22px 24px;box-shadow:var(--s1)}
+.card-sm{background:white;border-radius:10px;padding:13px 16px;box-shadow:var(--s1)}
+.card-dark{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:22px 24px}
+
+/* ═══════════════════ LAYOUT ═══════════════════ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;flex:1}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col{display:flex;flex-direction:column;gap:10px}
+.flex1{flex:1}
+
+/* ═══════════════════ BADGES ═══════════════════ */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600}
+.b-coral{background:#fde8e6;color:var(--coral)}
+.b-navy{background:#e8edf5;color:var(--navy)}
+.b-green{background:#dcf0e7;color:var(--green)}
+.b-gold{background:#fdf6e3;color:#8b6d0a}
+
+/* ═══════════════════ TABLE ═══════════════════ */
+.ctable{width:100%;border-collapse:collapse;font-size:12.5px}
+.ctable th{background:var(--ink);color:rgba(255,255,255,.88);padding:11px 14px;
+  text-align:center;font-weight:600;font-size:10.5px;letter-spacing:.5px}
+.ctable th:first-child{text-align:left}
+.ctable th:last-child{background:var(--coral)}
+.ctable td{padding:9px 14px;border-bottom:1px solid var(--warm);text-align:center}
+.ctable td:first-child{text-align:left;font-weight:500;color:var(--ink)}
+.ctable tr:nth-child(even) td{background:#faf8f5}
+.ck{color:var(--coral);font-size:15px;font-weight:700}.cx{color:#d1d5db;font-size:15px}
+
+/* ═══════════════════ FLOW ═══════════════════ */
+.flow{display:flex;align-items:stretch;gap:0;flex:none}
+.flow-box{background:var(--navy);color:white;border-radius:10px;padding:14px 16px;
+  font-size:11.5px;font-weight:600;text-align:center;flex:1;min-width:0}
+.flow-box.coral{background:var(--coral)}.flow-box.amber{background:var(--amber)}.flow-box.green{background:var(--green)}
+.flow-arrow{font-size:18px;color:var(--border);flex-shrink:0;padding:0 5px;display:flex;align-items:center}
+
+/* ═══════════════════ GANTT ═══════════════════ */
+.gantt-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.gantt-label{font-size:11px;width:220px;flex-shrink:0;color:var(--ink);font-weight:500}
+.gantt-track{flex:1;height:20px;background:var(--warm);border-radius:4px;position:relative;overflow:hidden}
+.gantt-bar{height:100%;border-radius:4px;position:absolute;width:0}
+.slide.active .gantt-bar{animation:barGrow .9s var(--ease-out) both}
+@keyframes barGrow{from{width:0}to{width:var(--w,20%)}}
+
+/* ═══════════════════ SCREENSHOT ═══════════════════ */
+.screen-frame{border-radius:14px;overflow:hidden;box-shadow:var(--s3);flex:1;display:flex}
+.screen-frame img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
+
+/* ═══════════════════ STEPS ═══════════════════ */
+.step-item{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)}
+.step-num{width:34px;height:34px;border-radius:50%;background:var(--coral);color:white;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+
+/* ═══════════════════ TEAM ═══════════════════ */
+.team-card{background:white;border-radius:18px;padding:32px 20px;text-align:center;
+  box-shadow:var(--s2);transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+.team-card:hover{transform:translateY(-5px);box-shadow:var(--s3)}
+.team-avatar{width:64px;height:64px;border-radius:50%;background:var(--coral);
+  margin:0 auto 16px;display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;font-size:22px;color:white;font-weight:700}
+
+/* ═══════════════════ ANIMATIONS ═══════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes counterUp{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+
+.slide.active .animate{animation:fadeUp .52s var(--ease-out) both}
+.slide.active .animate:nth-child(1){animation-delay:.06s}
+.slide.active .animate:nth-child(2){animation-delay:.14s}
+.slide.active .animate:nth-child(3){animation-delay:.22s}
+.slide.active .animate:nth-child(4){animation-delay:.30s}
+.slide.active .animate:nth-child(5){animation-delay:.38s}
+.slide.active .animate:nth-child(6){animation-delay:.46s}
+.slide.active .animate:nth-child(7){animation-delay:.54s}
+
+/* Decorative background number for SMART slides */
+.deco-n{position:absolute;right:60px;bottom:20px;font-family:'Playfair Display',serif;
+  font-size:220px;font-weight:900;color:var(--coral);opacity:.04;line-height:1;
+  pointer-events:none;user-select:none}
+
+/* ═══════════════════ DARK SLIDES (Cover + Thanks) ═══════════════════ */
+#s1,#s27{background:var(--ink) !important}
+#s1::before,#s27::before{background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px)}
+#s1 h1.t,#s27 h2.t{color:white}
+#s1 .tag{color:var(--gold);letter-spacing:4px}
+#s1 p,#s1 .lead{color:rgba(255,255,255,.48)}
+#s1 strong{color:white}
+#s1 .div,#s27 .div{background:var(--gold)}
+#s27 p,#s27 .lead{color:rgba(255,255,255,.5)}
+#s27 strong{color:white}
+#s27 .tag{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS -->
+<div class="progress" id="prog" style="width:3.57%"></div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+<div class="ticker">
+  <span class="up">S&P 500 ▲ 5,308.13 +0.87%</span>
+  <span class="dn">IBEX 35 ▼ 11,842.50 −0.24%</span>
+  <span class="up">NASDAQ 100 ▲ 18,765.20 +1.12%</span>
+  <span class="up">MSCI World ▲ 3,412.80 +0.55%</span>
+  <span class="dn">EUR/USD ▼ 1.0821 −0.18%</span>
+  <span class="up">NVIDIA ▲ 924.80 +2.34%</span>
+  <span class="dn">Repsol ▼ 13.92 −0.41%</span>
+  <span class="up">Iberdrola ▲ 13.05 +0.62%</span>
+  <span class="up">Apple ▲ 189.30 +1.05%</span>
+  <span class="dn">Euro Stoxx 50 ▼ 4,987.30 −0.11%</span>
+  <span class="up">S&P 500 ▲ 5,308.13 +0.87%</span>
+  <span class="dn">IBEX 35 ▼ 11,842.50 −0.24%</span>
+  <span class="up">NASDAQ 100 ▲ 18,765.20 +1.12%</span>
+  <span class="up">MSCI World ▲ 3,412.80 +0.55%</span>
+  <span class="dn">EUR/USD ▼ 1.0821 −0.18%</span>
+  <span class="up">NVIDIA ▲ 924.80 +2.34%</span>
+  <span class="dn">Repsol ▼ 13.92 −0.41%</span>
+  <span class="up">Iberdrola ▲ 13.05 +0.62%</span>
+  <span class="up">Apple ▲ 189.30 +1.05%</span>
+  <span class="dn">Euro Stoxx 50 ▼ 4,987.30 −0.11%</span>
+</div>
+</div>
+
+<div class="deck">
+
+<!-- ══════════════════════════════════════════════
+     S1 · PORTADA
+════════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <!-- animated SVG background -->
+  <svg style="position:absolute;right:0;top:0;width:55%;height:100%;opacity:.06" viewBox="0 0 600 500" preserveAspectRatio="xMidYMid slice">
+    <polyline points="0,400 60,370 120,350 150,380 200,320 260,290 300,310 340,250 380,220 420,240 460,180 500,160 560,130 600,100"
+      fill="none" stroke="#e8954a" stroke-width="3"
+      stroke-dasharray="1000" stroke-dashoffset="1000">
+      <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="3s" fill="freeze" begin="0.5s"/>
+    </polyline>
+    <polyline points="0,450 60,430 120,410 160,440 220,390 280,360 320,380 360,330 410,300 450,320 490,270 530,240 580,210 600,190"
+      fill="none" stroke="#94a3b8" stroke-width="2"
+      stroke-dasharray="1000" stroke-dashoffset="1000">
+      <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="3s" fill="freeze" begin="1s"/>
+    </polyline>
+  </svg>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:640px">
+    <div class="tag animate">Proyecto II · 2026</div>
+    <h1 class="t animate" style="margin-bottom:20px;font-size:clamp(64px,8vw,108px);letter-spacing:-2px">InvestAI</h1>
+    <p class="animate" style="color:rgba(255,255,255,.38);font-size:15px;font-weight:500;letter-spacing:1px;margin-bottom:20px;text-transform:uppercase">Portfolio Intelligence</p>
+    <div class="div animate"></div>
+    <p class="lead animate" style="color:#94a3b8;font-size:18px;margin-bottom:32px">
+      <strong style="color:#e8edf5">InvestAI</strong> — Portfolio Intelligence<br>
+      Sistema de gestión activa basado en Machine Learning
+    </p>
+    <p class="animate" style="color:#64748b;font-size:13px">Ignacio Mulas · Carmen Lozano · Samuel Izquierdo · Maria Macías · Berta Vaquero</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S2 · ÍNDICE
+════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="tag animate">Contenido</div>
+  <h2 class="t animate">Índice de la presentación</h2>
+  <div class="div animate"></div>
+  <div class="g2" style="gap:20px;flex:1">
+    <div class="col">
+      <div class="card animate" style="border-left:4px solid var(--coral)">
+        <div style="font-size:11px;font-weight:700;color:var(--coral);margin-bottom:4px;letter-spacing:1px">01</div>
+        <div style="font-weight:600;color:var(--navy)">Motivo</div>
+        <div style="font-size:12px;color:var(--muted)">Por qué existe InvestAI</div>
+      </div>
+      <div class="card animate" style="border-left:4px solid var(--coral)">
+        <div style="font-size:11px;font-weight:700;color:var(--coral);margin-bottom:4px;letter-spacing:1px">02</div>
+        <div style="font-weight:600;color:var(--navy)">Oportunidad: Era de la IA</div>
+        <div style="font-size:12px;color:var(--muted)">Contexto e inversión inteligente</div>
+      </div>
+      <div class="card animate" style="border-left:4px solid var(--coral)">
+        <div style="font-size:11px;font-weight:700;color:var(--coral);margin-bottom:4px;letter-spacing:1px">03</div>
+        <div style="font-weight:600;color:var(--navy)">Estado del Arte</div>
+        <div style="font-size:12px;color:var(--muted)">Competidores y tabla comparativa</div>
+      </div>
+      <div class="card animate" style="border-left:4px solid var(--coral)">
+        <div style="font-size:11px;font-weight:700;color:var(--coral);margin-bottom:4px;letter-spacing:1px">04</div>
+        <div style="font-weight:600;color:var(--navy)">Alcance y Arquitectura</div>
+        <div style="font-size:12px;color:var(--muted)">Qué hace y cómo está construido</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card animate" style="border-left:4px solid var(--navy)">
+        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px;letter-spacing:1px">05</div>
+        <div style="font-weight:600;color:var(--navy)">Objetivos SMART</div>
+        <div style="font-size:12px;color:var(--muted)">5 objetivos medibles y alcanzables</div>
+      </div>
+      <div class="card animate" style="border-left:4px solid var(--navy)">
+        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px;letter-spacing:1px">06</div>
+        <div style="font-weight:600;color:var(--navy)">Planificación y Riesgo</div>
+        <div style="font-size:12px;color:var(--muted)">Gantt y gestión del coste</div>
+      </div>
+      <div class="card animate" style="border-left:4px solid var(--green)">
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;letter-spacing:1px">07</div>
+        <div style="font-weight:600;color:var(--navy)">Demo — Producto Final</div>
+        <div style="font-size:12px;color:var(--muted)">InvestAI en vivo: localhost:8501</div>
+      </div>
+      <div class="card animate" style="border-left:4px solid var(--green)">
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;letter-spacing:1px">08</div>
+        <div style="font-weight:600;color:var(--navy)">Next Steps &amp; Equipo</div>
+        <div style="font-size:12px;color:var(--muted)">Próximos pasos y cierre</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S3 · MOTIVO — FLASH CRASH
+════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="tag animate">01 · Motivo</div>
+  <h2 class="t animate">El día que el mercado se rompió</h2>
+  <div class="div animate"></div>
+  <div class="g2" style="align-items:start;gap:40px;flex:1">
+    <div class="col animate">
+      <p class="lead">El <strong>6 de mayo de 2010</strong>, el Dow Jones cayó <strong style="color:var(--coral)">998.50 puntos</strong> en minutos — la mayor caída intradía de la historia — antes de recuperarse casi completamente en 20 minutos.</p>
+      <p>Un único fondo de inversión lanzó una orden algorítmica de venta masiva. El efecto dominó se propagó por todo el sistema en segundos.</p>
+      <div class="card" style="border-left:4px solid var(--coral);background:#fdf3f2">
+        <div style="font-size:28px;font-weight:900;color:var(--coral);font-family:'Playfair Display',serif">−998.50 pts</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:4px">Caída récord intradía · DJIA · Mayo 2010</div>
+      </div>
+      <p style="font-size:15px;font-weight:600;color:var(--navy);line-height:1.5">El inversor particular no puede depender de herramientas estáticas ante un mercado que se mueve en milisegundos.</p>
+    </div>
+    <div class="animate" style="flex:1">
+      <!-- Animated crash chart -->
+      <svg viewBox="0 0 400 220" width="100%" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 16px rgba(0,0,0,.08)">
+        <text x="10" y="20" font-size="10" fill="#9ca3af">DJIA · 6 May 2010</text>
+        <line x1="10" y1="30" x2="390" y2="30" stroke="#f0ebe0" stroke-width="1"/>
+        <line x1="10" y1="80" x2="390" y2="80" stroke="#f0ebe0" stroke-width="1"/>
+        <line x1="10" y1="130" x2="390" y2="130" stroke="#f0ebe0" stroke-width="1"/>
+        <line x1="10" y1="180" x2="390" y2="180" stroke="#f0ebe0" stroke-width="1"/>
+        <text x="390" y="33" font-size="9" fill="#9ca3af" text-anchor="end">11,000</text>
+        <text x="390" y="83" font-size="9" fill="#9ca3af" text-anchor="end">10,600</text>
+        <text x="390" y="133" font-size="9" fill="#9ca3af" text-anchor="end">10,200</text>
+        <text x="390" y="183" font-size="9" fill="#9ca3af" text-anchor="end">9,800</text>
+        <!-- Normal line pre-crash -->
+        <polyline points="10,50 80,52 140,48 180,55 200,58 220,60"
+          fill="none" stroke="#1b2d40" stroke-width="2.5"
+          stroke-dasharray="500" stroke-dashoffset="500">
+          <animate attributeName="stroke-dashoffset" from="500" to="0" dur="1s" fill="freeze" begin="0s"/>
+        </polyline>
+        <!-- Crash -->
+        <polyline points="220,60 240,80 255,120 265,195 270,210"
+          fill="none" stroke="#c4574a" stroke-width="3"
+          stroke-dasharray="300" stroke-dashoffset="300">
+          <animate attributeName="stroke-dashoffset" from="300" to="0" dur=".8s" fill="freeze" begin="1s"/>
+        </polyline>
+        <!-- Recovery -->
+        <polyline points="270,210 285,160 300,120 320,80 360,65 390,60"
+          fill="none" stroke="#2e7d5a" stroke-width="2.5"
+          stroke-dasharray="400" stroke-dashoffset="400">
+          <animate attributeName="stroke-dashoffset" from="400" to="0" dur="1s" fill="freeze" begin="1.8s"/>
+        </polyline>
+        <text x="258" y="205" font-size="9" fill="#c4574a" font-weight="bold">−9.2%</text>
+        <text x="10" y="215" font-size="9" fill="#9ca3af">12PM</text>
+        <text x="185" y="215" font-size="9" fill="#9ca3af">2PM</text>
+        <text x="360" y="215" font-size="9" fill="#9ca3af">4PM</text>
+      </svg>
+      <div class="card-sm" style="margin-top:14px;background:#faf0f0;border-left:3px solid var(--coral)">
+        <p style="font-size:12px;color:var(--coral);font-weight:600"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="vertical-align:middle;margin-right:4px"><circle cx="6.5" cy="4.5" r="3" stroke="#c4574a" stroke-width="1.4" fill="none"/><line x1="5" y1="9.5" x2="8" y2="9.5" stroke="#c4574a" stroke-width="1.4" stroke-linecap="round"/><line x1="5.8" y1="11.5" x2="7.2" y2="11.5" stroke="#c4574a" stroke-width="1.4" stroke-linecap="round"/><line x1="6.5" y1="7.5" x2="6.5" y2="9.5" stroke="#c4574a" stroke-width="1.4"/></svg> Necesidad identificada</p>
+        <p style="font-size:12px;margin-top:4px">Una herramienta accesible que ayude al inversor particular a construir carteras robustas con análisis de riesgo en tiempo real.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S4 · OPORTUNIDAD ERA IA
+════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="tag animate">01 · Motivo</div>
+  <h2 class="t animate">Oportunidad: Era de la Inteligencia Artificial</h2>
+  <div class="div animate"></div>
+  <div class="g2" style="flex:1;align-items:start">
+    <div class="col animate">
+      <div class="card" style="border-top:3px solid var(--coral)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--coral);margin-bottom:8px">Cambio de paradigma</div>
+        <p>Según <strong>Accenture Technology Vision 2024</strong>, las empresas han pasado de usar la IA para <em>"ahorrar costes"</em> a usarla para <strong>"crecer en ingresos"</strong>.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--navy)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--navy);margin-bottom:8px">Democratización del análisis</div>
+        <p>Las herramientas de análisis financiero institucional — antes reservadas a <strong>Bloomberg Terminal ($24.000/año)</strong> — ahora pueden democratizarse con IA y datos abiertos.</p>
+      </div>
+      <div class="card" style="background:var(--navy);border:none">
+        <p style="color:#e8edf5;font-size:15px;font-weight:600;line-height:1.5">Para un inversor, esto se traduce en una oportunidad histórica: <span style="color:var(--amber)">identificar modelos de negocio hipereficientes mediante análisis predictivo.</span></p>
+      </div>
+    </div>
+    <div class="col animate">
+      <div class="g2" style="gap:14px;flex:none">
+        <div class="card-sm" style="text-align:center;border-top:3px solid var(--amber)">
+          <div style="font-size:32px;font-weight:900;color:var(--amber);font-family:'Playfair Display',serif">$4.4T</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Valor global del mercado IA para 2028 (McKinsey)</div>
+        </div>
+        <div class="card-sm" style="text-align:center;border-top:3px solid var(--coral)">
+          <div style="font-size:32px;font-weight:900;color:var(--coral);font-family:'Playfair Display',serif">73%</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Gestores que usarán IA en decisiones de inversión en 2026</div>
+        </div>
+        <div class="card-sm" style="text-align:center;border-top:3px solid var(--green)">
+          <div style="font-size:32px;font-weight:900;color:var(--green);font-family:'Playfair Display',serif">+21%</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Rentabilidad media adicional de carteras optimizadas con ML (Morningstar 2023)</div>
+        </div>
+        <div class="card-sm" style="text-align:center;border-top:3px solid var(--navy)">
+          <div style="font-size:32px;font-weight:900;color:var(--navy);font-family:'Playfair Display',serif">56M</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Inversores minoristas en Europa sin acceso a análisis cuantitativo</div>
+        </div>
+      </div>
+      <div class="card-sm" style="background:#f0f7f3;border-left:3px solid var(--green)">
+        <p style="font-size:12.5px;color:var(--green);font-weight:600"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="vertical-align:middle;margin-right:4px"><polyline points="1,11 4,7 7,8.5 10,4 12,5" stroke="#2e7d5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9,4 12,4 12,7" stroke="#2e7d5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Artículo: "AI to broaden investment opportunities in 2026" — The Economic Times</p>
+        <p style="font-size:12px;margin-top:4px">Las firmas más pequeñas serán las principales beneficiadas de la democratización del análisis con IA.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S5 · ESTADO DEL ARTE
+════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="tag animate">02 · Estado del Arte</div>
+  <h2 class="t animate">¿Qué existe hoy y qué falta?</h2>
+  <div class="div animate"></div>
+  <div class="g3 animate" style="flex:1;align-items:start">
+    <div class="card" style="height:100%;border-top:4px solid #6b7280">
+      <div style="font-weight:700;font-size:16px;color:var(--navy);margin-bottom:16px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="5" width="12" height="10" rx="3" stroke="#1b2d40" stroke-width="1.5"/><circle cx="7.5" cy="9.5" r="1.5" fill="#1b2d40"/><circle cx="12.5" cy="9.5" r="1.5" fill="#1b2d40"/><line x1="7" y1="12" x2="13" y2="12" stroke="#1b2d40" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="5" x2="10" y2="3" stroke="#1b2d40" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="2.5" r="1" fill="#1b2d40"/><line x1="4" y1="15" x2="4" y2="18" stroke="#1b2d40" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="15" x2="16" y2="18" stroke="#1b2d40" stroke-width="1.5" stroke-linecap="round"/></svg> Robo-Advisors</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <div class="badge b-navy" style="text-align:center">Betterment</div>
+        <div class="badge b-navy" style="text-align:center">Indexa Capital</div>
+        <div class="badge b-navy" style="text-align:center">Finizens</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">
+        <div style="margin-bottom:6px">✅ Fácil de usar</div>
+        <div style="margin-bottom:6px">✅ Coste accesible</div>
+        <div style="margin-bottom:6px">✅ Personalización básica</div>
+        <div style="margin-bottom:6px;color:#f87171">❌ Sin predicción con ML</div>
+        <div style="color:#f87171">❌ Sin riesgo geopolítico</div>
+      </div>
+    </div>
+    <div class="card" style="height:100%;border-top:4px solid var(--amber)">
+      <div style="font-weight:700;font-size:16px;color:var(--navy);margin-bottom:16px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="12" width="4" height="6" rx="1" fill="#b45309"/><rect x="8" y="7" width="4" height="11" rx="1" fill="#b45309"/><rect x="14" y="3" width="4" height="15" rx="1" fill="#b45309" opacity=".7"/><line x1="1" y1="18" x2="19" y2="18" stroke="#b45309" stroke-width="1.5"/></svg> Terminales Pro</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <div class="badge" style="background:#fff3e0;color:#b45309;text-align:center">Bloomberg Terminal</div>
+        <div class="badge" style="background:#fff3e0;color:#b45309;text-align:center">Reuters Eikon</div>
+        <div class="badge" style="background:#fff3e0;color:#b45309;text-align:center">FactSet</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">
+        <div style="margin-bottom:6px">✅ Análisis avanzado</div>
+        <div style="margin-bottom:6px">✅ Datos en tiempo real</div>
+        <div style="margin-bottom:6px">✅ Riesgo geopolítico</div>
+        <div style="margin-bottom:6px;color:#f87171">❌ $24.000/año</div>
+        <div style="color:#f87171">❌ No retail</div>
+      </div>
+    </div>
+    <div class="card" style="height:100%;border-top:4px solid var(--navy)">
+      <div style="font-weight:700;font-size:16px;color:var(--navy);margin-bottom:16px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="6" r="3" stroke="#1b2d40" stroke-width="1.5" fill="none"/><path d="M1,17 Q1,12 7,12 Q13,12 13,17" stroke="#1b2d40" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="15" cy="6" r="2.5" stroke="#1b2d40" stroke-width="1.2" fill="none" opacity=".6"/><path d="M12,16 Q12,12 16,12 Q19,12 19,16" stroke="#1b2d40" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".6"/></svg> Social Trading</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <div class="badge b-coral" style="text-align:center">eToro</div>
+        <div class="badge b-coral" style="text-align:center">TipRanks</div>
+        <div class="badge b-coral" style="text-align:center">StockTwits</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">
+        <div style="margin-bottom:6px">✅ Social &amp; accesible</div>
+        <div style="margin-bottom:6px">✅ Copy trading</div>
+        <div style="margin-bottom:6px;color:#f87171">❌ Sin análisis cuantitativo</div>
+        <div style="margin-bottom:6px;color:#f87171">❌ Sin optimización ML</div>
+        <div style="color:#f87171">❌ Sin riesgo geopolítico</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S6 · TABLA COMPARATIVA
+════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="tag animate">02 · Estado del Arte</div>
+  <h2 class="t animate">Tabla comparativa</h2>
+  <div class="div animate"></div>
+  <div class="animate flex1" style="display:flex;flex-direction:column;justify-content:center">
+    <table class="ctable">
+      <thead>
+        <tr>
+          <th style="width:30%">Característica clave</th>
+          <th>Robo-Advisors</th>
+          <th>Terminales Pro</th>
+          <th>Social Trading</th>
+          <th style="background:#a03d32">InvestAI ✦</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Personalización por perfil de riesgo</td><td><span class="ck">✔</span></td><td><span class="ck">✔</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Predicción con Machine Learning</td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Análisis de riesgo geopolítico</td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Optimización Markowitz (Sharpe)</td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Interfaz accesible (retail)</td><td><span class="ck">✔</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Coste accesible</td><td><span class="ck">✔</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Backtesting histórico</td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td></tr>
+        <tr><td>Escenarios pesimista/base/optimista</td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="ck">✔</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:16px;text-align:right">
+      <span class="badge b-coral">InvestAI es el único sistema que combina ML + geopolítica + accesibilidad en una sola plataforma</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S7 · LO QUE NOS DIFERENCIA
+════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="tag animate">02 · Propuesta de Valor</div>
+  <h2 class="t animate">No solo informa — <span style="color:var(--coral)">decide</span></h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1">
+    <div class="col">
+      <div class="card" style="flex:1;border-left:5px solid var(--coral)">
+        <svg width="44" height="44" viewBox="0 0 44 44" style="margin-bottom:10px;display:block"><rect width="44" height="44" rx="9" fill="#fde8e6"/><polyline points="7,34 13,25 19,20 26,13 37,9" fill="none" stroke="#c4574a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="34" r="3" fill="#c4574a"/><circle cx="13" cy="25" r="3" fill="#c4574a"/><circle cx="19" cy="20" r="3" fill="#c4574a"/><circle cx="26" cy="13" r="3" fill="#c4574a"/><circle cx="37" cy="9" r="3" fill="#c4574a"/></svg>
+        <h3 class="t" style="font-size:17px;margin-bottom:8px">Predicción de Outperform con ML</h3>
+        <p>El motor de scoring analiza 7 factores cuantitativos (capitalización, momentum, crecimiento de ingresos, margen, beta, PER, sector) para identificar empresas con mayor probabilidad de superar al índice.</p>
+      </div>
+      <div class="card" style="flex:1;border-left:5px solid var(--amber)">
+        <svg width="44" height="44" viewBox="0 0 44 44" style="margin-bottom:10px;display:block"><rect width="44" height="44" rx="9" fill="#fff3e0"/><circle cx="22" cy="22" r="13" fill="none" stroke="#e8954a" stroke-width="2.2"/><ellipse cx="22" cy="22" rx="6.5" ry="13" fill="none" stroke="#e8954a" stroke-width="1.6"/><line x1="9" y1="22" x2="35" y2="22" stroke="#e8954a" stroke-width="1.6"/><path d="M11,16 Q22,14 33,16" fill="none" stroke="#e8954a" stroke-width="1.2" opacity=".6"/><path d="M11,28 Q22,30 33,28" fill="none" stroke="#e8954a" stroke-width="1.2" opacity=".6"/></svg>
+        <h3 class="t" style="font-size:17px;margin-bottom:8px">Riesgo geopolítico en tiempo real</h3>
+        <p>Integración con Google News y análisis NLP que detecta eventos globales y ajusta automáticamente la exposición sectorial ante tensiones geopolíticas.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="flex:1;border-left:5px solid var(--navy)">
+        <svg width="44" height="44" viewBox="0 0 44 44" style="margin-bottom:10px;display:block"><rect width="44" height="44" rx="9" fill="#e8edf5"/><line x1="7" y1="37" x2="7" y2="7" stroke="#1b2d40" stroke-width="1.6" opacity=".4" stroke-linecap="round"/><line x1="7" y1="37" x2="37" y2="37" stroke="#1b2d40" stroke-width="1.6" opacity=".4" stroke-linecap="round"/><path d="M9,35 Q22,18 36,11" fill="none" stroke="#c4574a" stroke-width="1.5" stroke-dasharray="3,2"/><circle cx="11" cy="33" r="2.8" fill="#1b2d40" opacity=".45"/><circle cx="17" cy="27" r="2.8" fill="#1b2d40" opacity=".55"/><circle cx="23" cy="21" r="2.8" fill="#1b2d40" opacity=".65"/><circle cx="29" cy="16" r="3.5" fill="#c4574a"/><circle cx="34" cy="13" r="2.8" fill="#1b2d40" opacity=".45"/></svg>
+        <h3 class="t" style="font-size:17px;margin-bottom:8px">Optimización Markowitz</h3>
+        <p>Asignación de pesos mediante optimización media-varianza. Para perfiles conservadores minimiza la varianza; para agresivos maximiza el ratio de Sharpe.</p>
+      </div>
+      <div class="card" style="flex:1;border-left:5px solid var(--green)">
+        <svg width="44" height="44" viewBox="0 0 44 44" style="margin-bottom:10px;display:block"><rect width="44" height="44" rx="9" fill="#dcf0e7"/><rect x="6" y="9" width="32" height="20" rx="3" fill="none" stroke="#2e7d5a" stroke-width="2.2"/><line x1="3" y1="31" x2="41" y2="31" stroke="#2e7d5a" stroke-width="2.2" stroke-linecap="round"/><line x1="17" y1="31" x2="27" y2="35" stroke="#2e7d5a" stroke-width="1.8"/><polyline points="10,25 15,19 20,22 26,14 34,17" fill="none" stroke="#2e7d5a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3 class="t" style="font-size:17px;margin-bottom:8px">Accesible para el inversor retail</h3>
+        <p>Interfaz web desplegada en Streamlit. Sin instalación, sin curva de aprendizaje. Cuestionario de perfil en 2 minutos y cartera generada automáticamente.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S8 · ALCANCE
+════════════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="tag animate">03 · Alcance</div>
+  <h2 class="t animate">Alcance del proyecto</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="max-width:700px;margin-bottom:24px">
+    <p class="lead">Modelo de <strong>machine learning</strong> que transforma datos brutos de índices globales (S&amp;P 500, IBEX 35, MSCI World) en <strong>decisiones estratégicas</strong> para la gestión activa de una cartera, a través de un dashboard operativo en tiempo real con análisis de riesgo geopolítico integrado.</p>
+  </div>
+  <!-- Flow diagram -->
+  <div class="flow animate" style="flex:none;margin-bottom:24px">
+    <div class="flow-box coral" style="font-size:12px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="margin:0 auto 4px;display:block"><rect x="1" y="10" width="4" height="7" rx="1" fill="white" opacity=".8"/><rect x="7" y="6" width="4" height="11" rx="1" fill="white"/><rect x="13" y="2" width="4" height="15" rx="1" fill="white" opacity=".7"/></svg>Datos brutos<br><span style="opacity:.7;font-size:10px">yfinance · Wikipedia · Google News</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="font-size:12px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="margin:0 auto 4px;display:block"><polyline points="2,14 6,9 9,10 13,5 16,6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="2" cy="14" r="2" fill="white"/><circle cx="9" cy="10" r="2" fill="white"/><circle cx="16" cy="6" r="2" fill="white"/></svg>Modelo ML<br><span style="opacity:.7;font-size:10px">Scoring multifactor</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box amber" style="background:var(--amber);font-size:12px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="margin:0 auto 4px;display:block"><line x1="2" y1="16" x2="2" y2="2" stroke="white" stroke-width="1.4" opacity=".6"/><line x1="2" y1="16" x2="16" y2="16" stroke="white" stroke-width="1.4" opacity=".6"/><path d="M3,15 Q9,7 15,5" stroke="white" stroke-width="1.8" fill="none" stroke-dasharray="2,1.5"/><circle cx="8" cy="10" r="2.5" fill="white"/></svg>Markowitz<br><span style="opacity:.7;font-size:10px">Optimización cartera</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="font-size:12px">📈<br>Dashboard<br><span style="opacity:.7;font-size:10px">Streamlit · Plotly</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:var(--green);font-size:12px">✅<br>Gestión activa<br><span style="opacity:.7;font-size:10px">Cartera personalizada</span></div>
+  </div>
+  <!-- Geo risk sub-flow -->
+  <div class="animate" style="display:flex;justify-content:center">
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 1px 8px rgba(0,0,0,.06)">
+      <span style="font-size:13px">🌍 Análisis geopolítico NLP</span>
+      <span style="color:var(--coral)">→</span>
+      <span style="font-size:13px">Ajuste dinámico de exposición sectorial</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S9 · REQUISITOS DEL SISTEMA
+════════════════════════════════════════════════ -->
+<div class="slide" id="s9req">
+  <div class="tag animate">03 · Requisitos del Sistema</div>
+  <h2 class="t animate">Requisitos del sistema</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px">
+    <div style="border-left:4px solid var(--coral);background:#fff;border-radius:8px;padding:10px 18px;display:flex;gap:16px;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.05)">
+      <div style="min-width:190px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--coral)">Perfilado del inversor</div>
+      <p style="font-size:13px;line-height:1.45">Cuestionario integral para capturar la tolerancia al riesgo, horizonte temporal, preferencias sectoriales, criterios ESG y capacidad de inversión.</p>
+    </div>
+    <div style="border-left:4px solid var(--navy);background:#fff;border-radius:8px;padding:10px 18px;display:flex;gap:16px;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.05)">
+      <div style="min-width:190px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--navy)">Autonomía</div>
+      <p style="font-size:13px;line-height:1.45">El sistema <strong>no realiza ninguna inversión sin la aprobación del usuario</strong>. Toda propuesta es revisable antes de guardarse.</p>
+    </div>
+    <div style="border-left:4px solid var(--amber);background:#fff;border-radius:8px;padding:10px 18px;display:flex;gap:16px;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.05)">
+      <div style="min-width:190px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#b45309">Ingesta multifuente</div>
+      <p style="font-size:13px;line-height:1.45">Integración automatizada de datos financieros (precios y fundamentales), composición de índices (S&amp;P 500, IBEX 35) y actualidad geopolítica en tiempo real.</p>
+    </div>
+    <div style="border-left:4px solid var(--coral);background:#fff;border-radius:8px;padding:10px 18px;display:flex;gap:16px;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.05)">
+      <div style="min-width:190px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--coral)">Motor de puntuación</div>
+      <p style="font-size:13px;line-height:1.45">Algoritmo que analiza y clasifica hasta <strong>80 activos</strong> evaluando <strong>7 factores cuantitativos</strong> según su alineación con el perfil del cliente.</p>
+    </div>
+    <div style="border-left:4px solid var(--navy);background:#fff;border-radius:8px;padding:10px 18px;display:flex;gap:16px;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.05)">
+      <div style="min-width:190px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--navy)">Optimizador de cartera</div>
+      <p style="font-size:13px;line-height:1.45">Asignación de activos (acciones, ETFs o mixta) aplicando el modelo de <strong>Markowitz</strong> para minimizar la varianza o maximizar el ratio de Sharpe.</p>
+    </div>
+    <div style="border-left:4px solid var(--green);background:#fff;border-radius:8px;padding:10px 18px;display:flex;gap:16px;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.05)">
+      <div style="min-width:190px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--green)">Escenarios y proyecciones</div>
+      <p style="font-size:13px;line-height:1.45">Modelado de expectativas de rentabilidad (pesimista, base, optimista) ajustadas por riesgo, incluyendo simulaciones de inversión recurrente (<strong>Dollar-Cost Averaging</strong>).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S9 · QUÉ HACE / QUÉ NO HACE
+════════════════════════════════════════════════ -->
+<div class="slide" id="s9">
+  <div class="tag animate">03 · Alcance</div>
+  <h2 class="t animate">Qué hace InvestAI — y qué <span style="color:var(--coral)">no</span> hace</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1">
+    <div>
+      <div style="font-weight:700;color:var(--green);font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+        <span style="width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px">✓</span> SÍ hace
+      </div>
+      <div class="col">
+        <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Perfilado del inversor</strong> — cuestionario integral de riesgo, horizonte y preferencias</div>
+        <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Análisis de 80+ activos</strong> — scoring ML con 7 factores cuantitativos en tiempo real</div>
+        <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Optimización de cartera</strong> — Markowitz con minimización de varianza o máx. Sharpe</div>
+        <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Escenarios de rentabilidad</strong> — pesimista / base / optimista con DCA</div>
+        <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Backtesting histórico</strong> — comparación vs S&amp;P 500 con métricas avanzadas</div>
+        <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Riesgo geopolítico</strong> — análisis NLP de noticias en tiempo real</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--coral);font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+        <span style="width:28px;height:28px;border-radius:50%;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px">✗</span> NO hace
+      </div>
+      <div class="col">
+        <div class="card-sm" style="border-left:3px solid var(--coral);background:#fdf3f2"><strong>No ejecuta órdenes</strong> — no conecta con ningún bróker ni realiza transacciones reales</div>
+        <div class="card-sm" style="border-left:3px solid var(--coral);background:#fdf3f2"><strong>No garantiza rentabilidad</strong> — las proyecciones son estimaciones basadas en datos históricos</div>
+        <div class="card-sm" style="border-left:3px solid var(--coral);background:#fdf3f2"><strong>No es asesoramiento regulado</strong> — no sustituye a un asesor financiero certificado (MiFID II)</div>
+        <div class="card-sm" style="border-left:3px solid var(--coral);background:#fdf3f2"><strong>No gestiona dinero real</strong> — es una herramienta de análisis y propuesta, no de gestión</div>
+        <div class="card-sm" style="border-left:3px solid var(--coral);background:#fdf3f2"><strong>No actúa sin aprobación</strong> — el usuario siempre aprueba antes de guardar cualquier cartera</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S10 · ARQUITECTURA
+════════════════════════════════════════════════ -->
+<div class="slide" id="s10">
+  <div class="tag animate">03 · Arquitectura</div>
+  <h2 class="t animate">Arquitectura técnica del sistema</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;flex-direction:column;gap:10px">
+    <!-- Root -->
+    <div style="text-align:center">
+      <div style="display:inline-block;background:var(--coral);color:#fff;border-radius:8px;padding:10px 28px;font-weight:700;font-size:13px">
+        InvestAI — Gestión Activa con Riesgo Geopolítico
+      </div>
+    </div>
+    <!-- Level 1 -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+      <div style="text-align:center">
+        <div style="width:2px;height:20px;background:var(--border);margin:0 auto"></div>
+        <div style="background:#3d6b4a;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:600">Inteligencia de Datos</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px;height:20px;background:var(--border);margin:0 auto"></div>
+        <div style="background:#3d6b4a;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:600">Riesgo Geopolítico</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px;height:20px;background:var(--border);margin:0 auto"></div>
+        <div style="background:#3d6b4a;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:600">Modelo Predictivo</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px;height:20px;background:var(--border);margin:0 auto"></div>
+        <div style="background:#3d6b4a;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:600">Dashboard Operativo</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px;height:20px;background:var(--border);margin:0 auto"></div>
+        <div style="background:#3d6b4a;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:600">Automatización</div>
+      </div>
+    </div>
+    <!-- Level 2 -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+      <div class="col" style="gap:6px">
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Criterios inclusión S&amp;P, IBEX, MSCI</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Feature Engineering (yfinance)</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Ingesta automática vía API</div>
+      </div>
+      <div class="col" style="gap:6px">
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Google News API + NLP</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Sentimiento y clasificación de riesgo</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Palabras clave de alto/bajo riesgo</div>
+      </div>
+      <div class="col" style="gap:6px">
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Scoring multifactor (7 variables)</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Optimización Sharpe + Filtros ESG</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Backtesting vs benchmarks</div>
+      </div>
+      <div class="col" style="gap:6px">
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Test de Inversor SMART</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Interfaz Streamlit + Plotly</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Motor de notificaciones</div>
+      </div>
+      <div class="col" style="gap:6px">
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Cron Jobs diarios</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Monitorización de errores</div>
+        <div class="card-sm" style="font-size:10.5px;text-align:center">Pruebas de estrés y latencia</div>
+      </div>
+    </div>
+    <!-- Stack -->
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px">
+      <span class="badge b-navy">Python 3.11</span>
+      <span class="badge b-navy">Streamlit 1.57</span>
+      <span class="badge b-navy">scikit-learn</span>
+      <span class="badge b-navy">SciPy (Markowitz)</span>
+      <span class="badge b-navy">yfinance</span>
+      <span class="badge b-navy">Plotly</span>
+      <span class="badge b-coral">Google News API</span>
+      <span class="badge b-coral">BeautifulSoup</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S11–S15 · SMART (5 slides)
+════════════════════════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="tag animate">04 · Objetivos SMART · 1/5</div>
+  <h2 class="t animate">Construcción y selección de variables predictivas</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:center">
+    <div class="col">
+      <p class="lead">Identificar, sintetizar y validar un conjunto de indicadores clave para predecir con alta fiabilidad los rebalanceos en S&P 500, IBEX 35 y MSCI World.</p>
+      <div class="col" style="gap:10px">
+        <div class="card-sm" style="position:relative;padding-left:52px;overflow:hidden">
+          <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">S</div>
+          <strong>Específico:</strong> Selección de capitalización, momentum y ratios técnicos
+        </div>
+        <div class="card-sm" style="position:relative;padding-left:52px;overflow:hidden">
+          <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">M</div>
+          <strong>Medible:</strong> Score ML compuesto con validación histórica R² &gt; 0.80
+        </div>
+        <div class="card-sm" style="position:relative;padding-left:52px;overflow:hidden">
+          <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">A</div>
+          <strong>Alcanzable:</strong> Uso de yfinance e ingeniería de características (feature engineering)
+        </div>
+        <div class="card-sm" style="position:relative;padding-left:52px;overflow:hidden">
+          <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">R</div>
+          <strong>Relevante:</strong> Base para anticipar inclusiones de empresas en índices
+        </div>
+        <div class="card-sm" style="position:relative;padding-left:52px;overflow:hidden">
+          <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">T</div>
+          <strong>Temporal:</strong> Plazo de ejecución de 4 semanas
+        </div>
+      </div>
+    </div>
+    <div>
+      <svg viewBox="0 0 360 240" width="100%" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 16px rgba(0,0,0,.06)">
+        <text x="10" y="18" font-size="10" fill="#9ca3af">Score ML vs Inclusión en índice (simulado)</text>
+        <line x1="30" y1="20" x2="30" y2="210" stroke="#e5e7eb" stroke-width="1"/>
+        <line x1="30" y1="210" x2="350" y2="210" stroke="#e5e7eb" stroke-width="1"/>
+        <circle cx="80" cy="160" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="100" cy="140" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="130" cy="120" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="160" cy="100" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="180" cy="90" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="210" cy="70" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="240" cy="55" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="270" cy="45" r="5" fill="var(--coral)" opacity=".7"/>
+        <circle cx="300" cy="35" r="5" fill="var(--coral)" opacity=".7"/>
+        <line x1="60" y1="175" x2="320" y2="30" stroke="var(--navy)" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="35" y="215" font-size="9" fill="#9ca3af">Score bajo</text>
+        <text x="290" y="215" font-size="9" fill="#9ca3af">Score alto</text>
+        <text x="8" y="210" font-size="9" fill="#9ca3af" transform="rotate(-90,8,120)">P(inclusión)</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s12">
+  <div class="tag animate">04 · Objetivos SMART · 2/5</div>
+  <h2 class="t animate">Integración de riesgo geopolítico</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:center">
+    <div class="col">
+      <p class="lead">Incorporar una capa de análisis de datos no estructurados de eventos globales para ajustar dinámicamente la exposición al riesgo sectorial.</p>
+      <div class="col" style="gap:10px">
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">S</div><strong>Específico:</strong> Conexión con Google News y análisis de sentimiento por sector</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">M</div><strong>Medible:</strong> Respuesta del dashboard en menos de 60 segundos</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">A</div><strong>Alcanzable:</strong> NLP con palabras clave de alto/bajo riesgo por región global</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">R</div><strong>Relevante:</strong> Protección ante "Cisnes Negros" — eventos imposibles de modelar con datos históricos</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">T</div><strong>Temporal:</strong> Ejecución en 3 semanas</div>
+      </div>
+    </div>
+    <div class="col" style="gap:12px">
+      <div class="card" style="background:var(--navy)">
+        <div style="color:#e8edf5;font-weight:600;margin-bottom:8px;font-size:13px">🌍 Nivel de riesgo por región (simulado)</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#94a3b8;width:80px">EE.UU.</span><div style="flex:1;height:12px;background:#1e3a50;border-radius:4px"><div style="width:35%;height:100%;background:#4ade80;border-radius:4px"></div></div><span style="font-size:10px;color:#4ade80;width:50px">Bajo</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#94a3b8;width:80px">Europa</span><div style="flex:1;height:12px;background:#1e3a50;border-radius:4px"><div style="width:55%;height:100%;background:#fbbf24;border-radius:4px"></div></div><span style="font-size:10px;color:#fbbf24;width:50px">Medio</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#94a3b8;width:80px">China</span><div style="flex:1;height:12px;background:#1e3a50;border-radius:4px"><div style="width:75%;height:100%;background:var(--coral);border-radius:4px"></div></div><span style="font-size:10px;color:var(--coral);width:50px">Alto</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#94a3b8;width:80px">M. Oriente</span><div style="flex:1;height:12px;background:#1e3a50;border-radius:4px"><div style="width:88%;height:100%;background:#f87171;border-radius:4px"></div></div><span style="font-size:10px;color:#f87171;width:50px">Crítico</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#94a3b8;width:80px">Asia-Pac.</span><div style="flex:1;height:12px;background:#1e3a50;border-radius:4px"><div style="width:45%;height:100%;background:#fbbf24;border-radius:4px"></div></div><span style="font-size:10px;color:#fbbf24;width:50px">Medio</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s13">
+  <div class="tag animate">04 · Objetivos SMART · 3/5</div>
+  <h2 class="t animate">Modelo predictivo y optimización de cartera</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:center">
+    <div class="col">
+      <p class="lead">Construir un motor de scoring multifactor y un optimizador de cartera que supere al benchmark en rentabilidad ajustada por riesgo.</p>
+      <div class="col" style="gap:10px">
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">S</div><strong>Específico:</strong> Scoring 7 factores + Markowitz con restricciones ESG</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">M</div><strong>Medible:</strong> Superar benchmark en +15% en backtesting histórico</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">A</div><strong>Alcanzable:</strong> Aprovecha el "efecto inclusión" — las empresas que entran en índices suben ~3.4% en promedio</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">R</div><strong>Relevante:</strong> Éxito financiero y valor añadido real del algoritmo</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">T</div><strong>Temporal:</strong> Evaluación finalizada en 2 semanas</div>
+      </div>
+    </div>
+    <div class="col" style="gap:12px">
+      <div class="card">
+        <div style="font-weight:600;color:var(--navy);margin-bottom:12px;font-size:13px">7 Factores del scoring ML</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Cap. de mercado</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:80%;height:100%;background:var(--coral);border-radius:4px"></div></div><span style="font-size:11px;color:var(--coral)">25 pts</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Crec. ingresos</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:64%;height:100%;background:var(--coral);border-radius:4px"></div></div><span style="font-size:11px;color:var(--coral)">20 pts</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Crec. beneficios</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:48%;height:100%;background:var(--amber);border-radius:4px"></div></div><span style="font-size:11px;color:var(--amber)">15 pts</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Momentum 12M</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:58%;height:100%;background:var(--amber);border-radius:4px"></div></div><span style="font-size:11px;color:var(--amber)">18 pts</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Margen neto</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:38%;height:100%;background:var(--navy);border-radius:4px"></div></div><span style="font-size:11px;color:var(--navy)">12 pts</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Valoración (PER)</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:32%;height:100%;background:var(--navy);border-radius:4px"></div></div><span style="font-size:11px;color:var(--navy)">10 pts</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Trend sectorial</span><div style="width:120px;height:8px;background:#f0ebe0;border-radius:4px"><div style="width:32%;height:100%;background:var(--green);border-radius:4px"></div></div><span style="font-size:11px;color:var(--green)">10 pts</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s14">
+  <div class="tag animate">04 · Objetivos SMART · 4/5</div>
+  <h2 class="t animate">Dashboard operativo y perfilado del inversor</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:center">
+    <div class="col">
+      <p class="lead">Desplegar una interfaz interactiva que centralice el perfilado del inversor, la generación de cartera y la visualización de métricas de riesgo.</p>
+      <div class="col" style="gap:10px">
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">S</div><strong>Específico:</strong> Panel con pesos, justificación ML y métricas de riesgo por posición</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">M</div><strong>Medible:</strong> Latencia &lt;5s y disponibilidad del sistema del 99.9%</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">A</div><strong>Alcanzable:</strong> Frameworks modernos Streamlit + Plotly</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">R</div><strong>Relevante:</strong> Transparencia total para la toma de decisiones del usuario</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">T</div><strong>Temporal:</strong> Ejecución en 4 semanas</div>
+      </div>
+    </div>
+    <div class="col" style="gap:10px">
+      <div class="card" style="background:#f8fffe;border:1px solid #d1fae5">
+        <div style="font-weight:600;font-size:13px;color:var(--green);margin-bottom:10px">✅ Módulos del dashboard</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Cuestionario de perfil (6 secciones, botones de info)</div>
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Análisis de cartera (escenarios + justificación ML)</div>
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Mis carteras (guardar, renombrar, duplicar)</div>
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Dashboard live (rentabilidad real vs benchmark)</div>
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Backtesting histórico con DCA</div>
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Mapa de riesgo geopolítico</div>
+          <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle"></span>Sistema de notificaciones y alertas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s15">
+  <div class="tag animate">04 · Objetivos SMART · 5/5</div>
+  <h2 class="t animate">Automatización y estabilidad del sistema</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:center">
+    <div class="col">
+      <p class="lead">Asegurar robustez técnica para el envío de notificaciones y la coherencia de la cartera ante cambios de mercado.</p>
+      <div class="col" style="gap:10px">
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">S</div><strong>Específico:</strong> Automatizar alertas y limpieza de datos en tiempo real</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">M</div><strong>Medible:</strong> Tasa de error de flujo de datos inferior al 0.5%</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">A</div><strong>Alcanzable:</strong> Implementación de logs, caché y redundancia en APIs externas</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">R</div><strong>Relevante:</strong> Garantía de consejos oportunos sin fallos ante mercados volátiles</div>
+        <div class="card-sm" style="position:relative;padding-left:52px"><div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--coral)">T</div><strong>Temporal:</strong> Pruebas completadas en 2 semanas</div>
+      </div>
+    </div>
+    <div class="col" style="gap:12px">
+      <div class="card">
+        <div style="font-weight:600;font-size:13px;color:var(--navy);margin-bottom:12px">Sistema de alertas automáticas</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          <div class="card-sm" style="background:#fdf3f2;border-left:3px solid var(--coral)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-right:6px;vertical-align:middle"></span><strong>Alerta crítica:</strong> Caída &gt;5% en una posición en 24h</div>
+          <div class="card-sm" style="background:#fff9e6;border-left:3px solid var(--amber)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f59e0b;margin-right:6px;vertical-align:middle"></span><strong>Alerta media:</strong> Ganancia &gt;10% — revisar toma de beneficios</div>
+          <div class="card-sm" style="background:#f0f7f3;border-left:3px solid var(--green)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:6px;vertical-align:middle"></span><strong>Consejo periódico:</strong> Rebalanceo mensual sugerido por ML</div>
+          <div class="card-sm" style="background:#f0f4ff;border-left:3px solid var(--navy)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#3b82f6;margin-right:6px;vertical-align:middle"></span><strong>Evento geopolítico:</strong> Ajuste de exposición sectorial detectado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S16 · GANTT
+════════════════════════════════════════════════ -->
+<div class="slide" id="s16">
+  <div class="tag animate">05 · Planificación</div>
+  <h2 class="t animate">Diagrama de Gantt</h2>
+  <div class="div animate"></div>
+  <div class="animate flex1" style="display:flex;flex-direction:column;justify-content:center;gap:7px">
+    <!-- Header months -->
+    <div style="display:flex;gap:12px;margin-left:232px;font-size:9.5px;color:var(--muted);font-weight:600;margin-bottom:4px">
+      <span style="flex:1;text-align:center">Feb</span>
+      <span style="flex:1;text-align:center">Mar</span>
+      <span style="flex:1;text-align:center">Abr</span>
+      <span style="flex:1;text-align:center">May</span>
+    </div>
+    <!-- Rows -->
+    <div class="gantt-row"><div class="gantt-label">Criterios inclusión S&P, MSCI, IBEX</div><div class="gantt-track"><div class="gantt-bar" style="--w:25%;width:0%;background:#5b8dd9;left:0"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Ingeniería variables (Feature Eng.)</div><div class="gantt-track"><div class="gantt-bar" style="--w:22%;width:0%;background:#5b8dd9;left:18%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Ingesta automática (yfinance API)</div><div class="gantt-track"><div class="gantt-bar" style="--w:20%;width:0%;background:#5b8dd9;left:36%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Integración API GeoRisk / Noticias</div><div class="gantt-track"><div class="gantt-bar" style="--w:20%;width:0%;background:var(--amber);left:44%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">NLP para sentimiento y riesgo</div><div class="gantt-track"><div class="gantt-bar" style="--w:20%;width:0%;background:var(--amber);left:56%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Scoring multifactor (7 variables)</div><div class="gantt-track"><div class="gantt-bar" style="--w:20%;width:0%;background:var(--coral);left:62%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Optimización Sharpe + ESG</div><div class="gantt-track"><div class="gantt-bar" style="--w:16%;width:0%;background:var(--coral);left:72%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Backtesting vs Benchmarks</div><div class="gantt-track"><div class="gantt-bar" style="--w:12%;width:0%;background:var(--green);left:80%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Interfaz Streamlit + Plotly</div><div class="gantt-track"><div class="gantt-bar" style="--w:14%;width:0%;background:var(--green);left:78%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Memoria final</div><div class="gantt-track"><div class="gantt-bar" style="--w:16%;width:0%;background:#9b7ed4;left:76%"></div></div></div>
+    <div class="gantt-row"><div class="gantt-label">Presentación</div><div class="gantt-track"><div class="gantt-bar" style="--w:8%;width:0%;background:#9b7ed4;left:90%"></div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S17 · GESTIÓN DE RIESGO
+════════════════════════════════════════════════ -->
+<div class="slide" id="s17">
+  <div class="tag animate">05 · Gestión de Riesgo</div>
+  <h2 class="t animate">Gestión del coste y riesgo</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:start">
+    <div class="col">
+      <div class="card" style="background:#fdf3f2;border-top:3px solid var(--coral)">
+        <div style="font-size:13px;font-weight:700;color:var(--coral);margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2 L14 13 H2 Z" stroke="#c4574a" stroke-width="1.5" stroke-linejoin="round"/><line x1="8" y1="6" x2="8" y2="10" stroke="#c4574a" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="12" r=".8" fill="#c4574a"/></svg> El riesgo que nadie menciona</div>
+        <p>Muchos creen que la IA iguala el campo de juego, pero herramientas de IA para análisis de datos financieros tienen tasas de <strong>"alucinación" (datos falsos) de hasta el 41%</strong>. Un error basado en estos datos puede llevar a pérdidas totales.</p>
+        <p style="margin-top:8px;font-size:12px;color:var(--muted)">Fuente: IIBA — "AI Investing for Retail Investors: Opportunities, Risks, and What Most People Miss"</p>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">💡 ¿Cómo mitiga este riesgo InvestAI?</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+          <div>✅ <strong>Datos de fuente primaria</strong> — yfinance (Yahoo Finance API), sin intermediarios</div>
+          <div>✅ <strong>Sin generación de texto libre</strong> — todos los outputs son cálculos deterministas</div>
+          <div>✅ <strong>Validación cruzada</strong> — múltiples fuentes para capitalización y fundamentales</div>
+          <div>✅ <strong>Transparencia total</strong> — el usuario ve exactamente qué datos se usaron y por qué</div>
+          <div>✅ <strong>Sin autonomía</strong> — ninguna acción se ejecuta sin aprobación explícita del usuario</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">📋 Tipos de costes del proyecto</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr style="background:#f8f5f0"><td style="padding:7px 10px;font-weight:600">Tipo</td><td style="padding:7px 10px;font-weight:600">Detalle</td><td style="padding:7px 10px;font-weight:600;text-align:right">Estimación</td></tr>
+          <tr><td style="padding:7px 10px;border-top:1px solid #f0ebe0">APIs de datos</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0">yfinance (gratuito)</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0;text-align:right;color:var(--green)">€0</td></tr>
+          <tr><td style="padding:7px 10px;border-top:1px solid #f0ebe0">Hosting</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0">Streamlit Cloud (free tier)</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0;text-align:right;color:var(--green)">€0</td></tr>
+          <tr><td style="padding:7px 10px;border-top:1px solid #f0ebe0">Desarrollo</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0">~4 meses × equipo</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0;text-align:right">~480h</td></tr>
+          <tr style="background:#fdf3f2"><td style="padding:7px 10px;border-top:1px solid #f0ebe0;font-weight:700">Coste total</td><td style="padding:7px 10px;border-top:1px solid #f0ebe0"></td><td style="padding:7px 10px;border-top:1px solid #f0ebe0;text-align:right;font-weight:700;color:var(--coral)">€0 (open source)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S18 · PROPUESTA INICIAL vs REALIDAD
+════════════════════════════════════════════════ -->
+<div class="slide" id="s18">
+  <div class="tag animate">06 · Evolución del Proyecto</div>
+  <h2 class="t animate">De la propuesta inicial al producto final</h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;align-items:start">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">📐 Propuesta inicial</div>
+      <div class="card" style="border-top:3px solid #9ca3af;height:calc(100% - 32px)">
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:#6b7280">
+          <div>• Chatbot de inversión tipo interfaz conversacional</div>
+          <div>• Cartera recomendada S&P 500 e IBEX 35 únicamente</div>
+          <div>• Ajuste de perfil de riesgo con slider simple</div>
+          <div>• Comparativa Mi Cartera vs índice</div>
+          <div>• Sin backtesting histórico</div>
+          <div>• Sin análisis geopolítico</div>
+          <div>• Sin escenarios pesimista/base/optimista</div>
+          <div>• Sin DCA (Dollar-Cost Averaging)</div>
+          <div>• Sin personalización de mercado</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--coral);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">🚀 Producto final construido</div>
+      <div class="card" style="border-top:3px solid var(--coral);height:calc(100% - 32px)">
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+          <div>✅ Dashboard completo con 8 módulos navegables</div>
+          <div>✅ Universo de inversión: S&P 500, IBEX 35, NASDAQ 100, Euro Stoxx 50</div>
+          <div>✅ Cuestionario de 6 secciones con botones ℹ️ explicativos</div>
+          <div>✅ Escenarios pesimista / base / optimista con régimen histórico</div>
+          <div>✅ Backtesting con Sharpe ratio, Sortino, alpha, beta, VaR</div>
+          <div>✅ Análisis geopolítico con NLP en tiempo real</div>
+          <div>✅ DCA con proyección gráfica mensual</div>
+          <div>✅ Cartera mixta con distribución personalizable por el usuario</div>
+          <div>✅ Párrafo de justificación ML con datos financieros reales</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S19–S23 · DEMO SLIDES
+════════════════════════════════════════════════ -->
+<div class="slide" id="s19">
+  <div class="tag animate">07 · Demo — Producto Final</div>
+  <h2 class="t animate">Página de inicio — InvestAI</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;gap:28px;align-items:start">
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+      <div class="screen-frame" style="height:380px">
+        <img src="img/home.png" alt="InvestAI Home" style="width:100%;height:100%;object-fit:cover;object-position:top"/>
+      </div>
+    </div>
+    <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
+      <div class="card-sm" style="border-left:3px solid var(--coral)"><strong>4 módulos principales</strong><br><span style="font-size:12px">Perfil, Análisis, Optimización, Geopolítica</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--amber)"><strong>Navegación lateral</strong><br><span style="font-size:12px">8 secciones accesibles desde cualquier punto</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--navy)"><strong>Estado en tiempo real</strong><br><span style="font-size:12px">Carteras guardadas y notificaciones pendientes</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--green)"><strong>CTA principal</strong><br><span style="font-size:12px">"Iniciar cuestionario de perfil" en 2 clics</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s20">
+  <div class="tag animate">07 · Demo — Cuestionario de Perfil</div>
+  <h2 class="t animate">Configuración personalizada de cartera</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;gap:28px;align-items:start">
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+      <div class="screen-frame" style="height:380px">
+        <img src="img/perfil.png" alt="Cuestionario perfil" style="width:100%;height:100%;object-fit:cover;object-position:top"/>
+      </div>
+    </div>
+    <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
+      <div class="card-sm" style="border-left:3px solid var(--coral)"><strong>Distribución personalizada</strong><br><span style="font-size:12px">Slider 10-90% empresas vs ETFs — el usuario decide el split</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--amber)"><strong>Filtro de mercado</strong><br><span style="font-size:12px">S&P 500 · IBEX 35 · NASDAQ · Euro Stoxx — o universo global</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--navy)"><strong>Sectores preferidos</strong><br><span style="font-size:12px">15 sectores disponibles con selección múltiple</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Criterios ESG</strong><br><span style="font-size:12px">3 niveles: estricto, preferente, sin filtro</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s21">
+  <div class="tag animate">07 · Demo — Análisis de Cartera</div>
+  <h2 class="t animate">Resultados — escenarios y justificación ML</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;gap:28px;align-items:start">
+    <div style="flex:1">
+      <div class="screen-frame" style="height:390px">
+        <img src="img/analisis.png" alt="Análisis cartera" style="width:100%;height:100%;object-fit:cover;object-position:top"/>
+      </div>
+    </div>
+    <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
+      <div class="card-sm" style="border-left:3px solid var(--green)"><strong>KPIs clave</strong><br><span style="font-size:12px">Capital, horizonte, rentabilidad base esperada, beta, posiciones</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--amber)"><strong>3 escenarios</strong><br><span style="font-size:12px">Pesimista (+1.9%) · Base (+15.8%) · Optimista (+21.3%) — basados en regímenes históricos</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--coral)"><strong>Justificación ML</strong><br><span style="font-size:12px">Párrafo con datos reales: momentum 12M, β, crecimiento de ingresos por empresa</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s22">
+  <div class="tag animate">07 · Demo — Composición</div>
+  <h2 class="t animate">Composición de la cartera optimizada</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;gap:28px;align-items:start">
+    <div style="flex:1">
+      <div class="screen-frame" style="height:390px">
+        <img src="img/cartera.png" alt="Composición cartera" style="width:100%;height:100%;object-fit:cover;object-position:top"/>
+      </div>
+    </div>
+    <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
+      <div class="card-sm" style="border-left:3px solid var(--coral)"><strong>Gráfico donut interactivo</strong><br><span style="font-size:12px">Pesos visuales de cada posición en la cartera</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--amber)"><strong>Distribución sectorial</strong><br><span style="font-size:12px">Barras horizontales con % de exposición por sector</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--navy)"><strong>Posiciones recomendadas</strong><br><span style="font-size:12px">Ticker · Peso% · Capital € · Rentabilidad anual min/base/max</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Fundamento por empresa</strong><br><span style="font-size:12px">Razones ML + advertencias específicas por posición</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s23">
+  <div class="tag animate">07 · Demo — Dashboard</div>
+  <h2 class="t animate">Dashboard — seguimiento en tiempo real</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;gap:28px;align-items:start">
+    <div style="flex:1">
+      <div class="screen-frame" style="height:390px">
+        <img src="img/dashboard.png" alt="Dashboard" style="width:100%;height:100%;object-fit:cover;object-position:top"/>
+      </div>
+    </div>
+    <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
+      <div class="card-sm" style="border-left:3px solid var(--navy)"><strong>Evolución relativa 12M</strong><br><span style="font-size:12px">Tu cartera vs S&P 500, IBEX 35, MSCI World, NASDAQ, Euro Stoxx</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--coral)"><strong>Posiciones actuales</strong><br><span style="font-size:12px">Tabla con ticker, empresa, sector, peso%, capital €, rentabilidad y beta</span></div>
+      <div class="card-sm" style="border-left:3px solid var(--green)"><strong>Datos en vivo</strong><br><span style="font-size:12px">Precios descargados de yfinance desde la fecha de creación de la cartera</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S24 · DEMO LIVE
+════════════════════════════════════════════════ -->
+<div class="slide" id="s24">
+  <div class="tag animate">07 · Demo Live</div>
+  <h2 class="t animate" style="text-align:center;margin-top:40px">Demostración en vivo</h2>
+  <div class="div animate" style="margin:12px auto 32px"></div>
+  <div class="animate" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px">
+    <a href="http://localhost:8501" target="_blank"
+       style="display:flex;align-items:center;gap:16px;background:var(--navy);color:#fff;
+              border-radius:16px;padding:28px 48px;text-decoration:none;
+              box-shadow:0 8px 32px rgba(27,45,64,.35);transition:transform .2s"
+       onmouseover="this.style.transform='scale(1.03)'"
+       onmouseout="this.style.transform='scale(1)'">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" style="display:inline-block;flex-shrink:0"><path d="M19 5 L26 20 L19 17 L12 20 Z" fill="white" stroke="white" stroke-width="1.2" stroke-linejoin="round"/><line x1="19" y1="17" x2="19" y2="32" stroke="white" stroke-width="2.8" stroke-linecap="round"/><path d="M12 24 Q8 31 13 33" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M26 24 Q30 31 25 33" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div>
+        <div style="font-size:13px;opacity:.7;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Abrir aplicación</div>
+        <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--amber)">localhost:8501</div>
+      </div>
+    </a>
+    <div class="g3" style="max-width:680px;gap:14px">
+      <div class="card-sm" style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">📋</div>
+        <div style="font-size:12px;font-weight:600;color:var(--navy)">1. Cuestionario</div>
+        <div style="font-size:11px;color:var(--muted)">Perfil de inversión en 2 minutos</div>
+      </div>
+      <div class="card-sm" style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">⚙️</div>
+        <div style="font-size:12px;font-weight:600;color:var(--navy)">2. Análisis ML</div>
+        <div style="font-size:11px;color:var(--muted)">Scoring de 80+ activos en tiempo real</div>
+      </div>
+      <div class="card-sm" style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">💼</div>
+        <div style="font-size:12px;font-weight:600;color:var(--navy)">3. Cartera generada</div>
+        <div style="font-size:11px;color:var(--muted)">Optimización Markowitz + 3 escenarios</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S25 · NEXT STEPS
+════════════════════════════════════════════════ -->
+<div class="slide" id="s25">
+  <div class="tag animate">08 · Próximos Pasos</div>
+  <h2 class="t animate">Next Steps</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:800px">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div>
+        <strong style="font-size:15px">Integración con API financiera premium</strong>
+        <p style="margin-top:4px">Sustituir yfinance por Alpha Vantage o Polygon.io para datos de mayor calidad, mayor frecuencia y datos fundamentales más completos.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div>
+        <strong style="font-size:15px">Modelo de predicción supervisado (clasificación)</strong>
+        <p style="margin-top:4px">Entrenar un modelo Random Forest o XGBoost sobre histórico de inclusiones/exclusiones de S&P 500 para mejorar la probabilidad de outperform.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div>
+        <strong style="font-size:15px">Conexión con bróker vía API (modo sandbox)</strong>
+        <p style="margin-top:4px">Integrar Interactive Brokers o DeGiro API en modo paper trading para que el usuario pueda simular la ejecución real de la cartera propuesta.</p>
+      </div>
+    </div>
+    <div class="step-item" style="border-bottom:none">
+      <div class="step-num">4</div>
+      <div>
+        <strong style="font-size:15px">Base de datos persistente + autenticación de usuarios</strong>
+        <p style="margin-top:4px">Migrar de JSON local a Supabase/PostgreSQL y añadir autenticación para que múltiples usuarios puedan usar la plataforma simultáneamente.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S26 · EQUIPO
+════════════════════════════════════════════════ -->
+<div class="slide" id="s26">
+  <div class="tag animate">Equipo</div>
+  <h2 class="t animate">El equipo</h2>
+  <div class="div animate"></div>
+  <div class="animate" style="flex:1;display:flex;align-items:center;justify-content:center">
+    <div style="display:grid;grid-template-columns:repeat(5,180px);gap:20px">
+      <div class="team-card" style="padding:28px 20px">
+        <div class="team-avatar" style="width:64px;height:64px;font-size:24px">IM</div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);margin-top:12px">Ignacio Mulas</div>
+      </div>
+      <div class="team-card" style="padding:28px 20px">
+        <div class="team-avatar" style="width:64px;height:64px;font-size:24px;background:var(--navy)">CL</div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);margin-top:12px">Carmen Lozano</div>
+      </div>
+      <div class="team-card" style="padding:28px 20px">
+        <div class="team-avatar" style="width:64px;height:64px;font-size:24px;background:var(--amber)">SI</div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);margin-top:12px">Samuel Izquierdo</div>
+      </div>
+      <div class="team-card" style="padding:28px 20px">
+        <div class="team-avatar" style="width:64px;height:64px;font-size:24px;background:var(--green)">MM</div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);margin-top:12px">Maria Macías</div>
+      </div>
+      <div class="team-card" style="padding:28px 20px">
+        <div class="team-avatar" style="width:64px;height:64px;font-size:24px;background:#7c6fab">BV</div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);margin-top:12px">Berta Vaquero</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     S27 · GRACIAS
+════════════════════════════════════════════════ -->
+<div class="slide" id="s27">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <div class="tag animate" style="color:var(--amber)">Fin de la presentación</div>
+    <h1 class="t animate" style="color:#e8edf5;font-size:clamp(56px,7vw,96px);margin:16px 0">Gracias</h1>
+    <div class="animate" style="width:60px;height:3px;background:var(--amber);margin:0 auto 28px"></div>
+    <p class="animate" style="color:#94a3b8;font-size:16px;max-width:500px;line-height:1.7">
+      InvestAI — Portfolio Intelligence<br>
+      <span style="color:#64748b;font-size:14px">Sistema de gestión activa de carteras basado en Machine Learning y análisis de índices globales</span>
+    </p>
+    <div class="animate" style="margin-top:40px;display:flex;gap:24px;align-items:center">
+      <a href="http://localhost:8501" target="_blank"
+         style="display:inline-flex;align-items:center;gap:8px;background:var(--coral);color:#fff;
+                border-radius:8px;padding:12px 24px;text-decoration:none;font-weight:600;font-size:14px">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M8 2 L11 8 L8 7 L5 8 Z" fill="white" stroke="white" stroke-width=".5" stroke-linejoin="round"/><line x1="8" y1="7" x2="8" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M5 10 Q3 13 5.5 14" fill="none" stroke="white" stroke-width="1" stroke-linecap="round"/><path d="M11 10 Q13 13 10.5 14" fill="none" stroke="white" stroke-width="1" stroke-linecap="round"/></svg> Ver demo — localhost:8501
+      </a>
+    </div>
+    <p class="animate" style="margin-top:40px;color:#475569;font-size:12px">Proyecto II · 2026 · Ignacio Mulas · Carmen Lozano · Samuel Izquierdo · Maria Macías · Berta Vaquero</p>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<button class="nav" id="prev" onclick="go(-1)">‹</button>
+<button class="nav" id="next" onclick="go(1)">›</button>
+<div class="ctr" id="ctr">1 / 27</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const prog   = document.getElementById('prog');
+const ctr    = document.getElementById('ctr');
+let cur = 0;
+
+function updateUI() {
+  const n = slides.length;
+  ctr.textContent = (cur + 1) + ' / ' + n;
+  prog.style.width = ((cur + 1) / n * 100) + '%';
+}
+
+function go(dir) {
+  const next = cur + dir;
+  if (next < 0 || next >= slides.length) return;
+
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('out');
+  const prev = cur;
+  setTimeout(() => slides[prev].classList.remove('out'), 540);
+
+  cur = next;
+  slides[cur].classList.add('active');
+  updateUI();
+
+  // Animate counters (elements with data-count attribute)
+  slides[cur].querySelectorAll('[data-count]').forEach(el => {
+    const target = +el.dataset.count;
+    let start = 0;
+    const step = () => {
+      start += Math.ceil(target / 30);
+      if (start >= target) { el.textContent = target; return; }
+      el.textContent = start;
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft') go(-1);
+  if (e.key === 'ArrowUp') { e.preventDefault(); go(-1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); go(1); }
+});
+
+// Touch/swipe support
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+}, { passive: true });
+
+// Init
+updateUI();
+</script>
+</body>
+</html>
