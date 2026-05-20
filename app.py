@@ -702,14 +702,8 @@ def _render_portfolio_proposal(portfolio: dict, profile: dict, df_scored: pd.Dat
     # ── Párrafo de justificación ──────────────────────────────────────────────
     n_universe = len(df_scored) if df_scored is not None and not df_scored.empty else 0
     rationale = _portfolio_rationale(portfolio, profile, n_universe)
-    st.markdown(
-        f'<div class="inv-card" style="margin:8px 0 20px;line-height:1.65;font-size:0.9rem;">'
-        f'<span style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;'
-        f'color:{C_MUTED};display:block;margin-bottom:6px;">Por qué esta cartera</span>'
-        f'{rationale}'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown("#### Por qué esta cartera")
+    st.info(rationale)
 
     st.markdown("## Composicion de la cartera")
     col_chart, col_list = st.columns([1, 1])
