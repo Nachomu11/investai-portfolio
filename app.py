@@ -545,6 +545,84 @@ def page_analysis():
     _render_portfolio_proposal(st.session_state.portfolio, profile, st.session_state.df_scored)
 
 
+def _portfolio_rationale(portfolio: dict, profile: dict) -> str:
+    holdings = portfolio["holdings"]
+    n = len(holdings)
+    amount = portfolio["total_invested"]
+    beta = portfolio.get("portfolio_beta", 1.0)
+    port_type = portfolio.get("type", "mixed")
+    risk = profile.get("risk_score", 5)
+    risk_label = "conservador" if risk <= 3 else "moderado" if risk <= 6 else "agresivo"
+    pct_base = portfolio.get("expected_return_pct", 0)
+
+    # Top 3 posiciones por peso
+    top = holdings.head(3)
+
+    # Sector dominante
+    if "sector" in holdings.columns:
+        sector_weights = holdings.groupby("sector")["weight"].sum().sort_values(ascending=False)
+        top_sector = sector_weights.index[0] if not sector_weights.empty else "diversificado"
+        top_sector_pct = sector_weights.iloc[0] if not sector_weights.empty else 0
+    else:
+        top_sector, top_sector_pct = "diversificado", 0
+
+    if port_type == "indices":
+        names = ", ".join(f"{r['name']} ({r['weight']:.0f}%)" for _, r in top.iterrows())
+        avg_ret = holdings["expected_return_annual"].mean() if "expected_return_annual" in holdings.columns else pct_base
+        return (
+            f"La cartera está compuesta por {n} ETF{'s' if n > 1 else ''} de gestión pasiva: {names}. "
+            f"Esta estructura ofrece exposición diversificada a miles de empresas con costes muy reducidos, "
+            f"adecuada para un perfil {risk_label}. "
+            f"La rentabilidad histórica media ponderada de estos índices es del {avg_ret:.1f}% anual, "
+            f"con una beta de cartera de {beta:.2f} respecto al mercado global."
+        )
+
+    # Para carteras de acciones o mixtas
+    parts = []
+    for _, r in top.iterrows():
+        name = r.get("name", r.get("ticker", ""))
+        w = r.get("weight", 0)
+        rev_g = r.get("revenue_growth", 0) or 0
+        b = r.get("beta", 1.0) or 1.0
+        reasons = r.get("reasons", [])
+        main_reason = reasons[0] if reasons else f"beta {b:.1f}"
+        parts.append(f"{name} ({w:.0f}%, {main_reason})")
+
+    top_str = "; ".join(parts)
+
+    # Métricas de cartera
+    avg_rev_growth = holdings["revenue_growth"].mean() if "revenue_growth" in holdings.columns else 0
+    avg_beta = holdings["beta"].mean() if "beta" in holdings.columns else beta
+
+    # Contexto de selección
+    preferred_sectors = profile.get("preferred_sectors", [])
+    market_filter = [m for m in profile.get("stock_market_filter", []) if "Cualquier" not in m]
+    market_str = f" del {market_filter[0].split('(')[0].strip()}" if len(market_filter) == 1 else ""
+
+    sector_str = (
+        f"concentrando el {top_sector_pct:.0f}% en {top_sector}"
+        if top_sector_pct > 35
+        else f"diversificada entre varios sectores con mayor peso en {top_sector} ({top_sector_pct:.0f}%)"
+    )
+
+    idx_note = ""
+    if port_type == "mixed":
+        idx_pct = portfolio.get("idx_allocation_pct", 50)
+        stock_pct = portfolio.get("stock_allocation_pct", 50)
+        idx_note = f" El {idx_pct}% restante está en ETFs de índice para dar base y reducir volatilidad."
+
+    return (
+        f"El algoritmo analizó el universo de empresas{market_str} y seleccionó {n} posiciones "
+        f"optimizando la relación rentabilidad-riesgo para un perfil {risk_label}. "
+        f"Las principales apuestas son: {top_str}. "
+        f"La cartera queda {sector_str}, con un crecimiento medio de ingresos del {avg_rev_growth:.1f}% "
+        f"y una beta ponderada de {avg_beta:.2f} "
+        f"({'por debajo' if avg_beta < 1 else 'por encima'} del mercado). "
+        f"En el escenario base se estima una rentabilidad del {pct_base:.1f}% "
+        f"sobre el horizonte seleccionado.{idx_note}"
+    )
+
+
 def _render_portfolio_proposal(portfolio: dict, profile: dict, df_scored: pd.DataFrame):
     holdings = portfolio["holdings"]
     amount = portfolio["total_invested"]
@@ -604,6 +682,17 @@ def _render_portfolio_proposal(portfolio: dict, profile: dict, df_scored: pd.Dat
             'No constituyen garantia de rendimiento futuro.</div>',
             unsafe_allow_html=True,
         )
+
+    # ── Párrafo de justificación ──────────────────────────────────────────────
+    rationale = _portfolio_rationale(portfolio, profile)
+    st.markdown(
+        f'<div class="inv-card" style="margin:8px 0 20px;line-height:1.65;font-size:0.9rem;">'
+        f'<span style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;'
+        f'color:{C_MUTED};display:block;margin-bottom:6px;">Por qué esta cartera</span>'
+        f'{rationale}'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown("## Composicion de la cartera")
     col_chart, col_list = st.columns([1, 1])
