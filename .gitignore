@@ -20,6 +20,9 @@ Thumbs.db
 .idea/
 *.swp
 
+# Claude Code
+.claude/
+
 # Secretos
 .env
 .env.local
