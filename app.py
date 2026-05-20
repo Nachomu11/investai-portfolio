@@ -545,81 +545,97 @@ def page_analysis():
     _render_portfolio_proposal(st.session_state.portfolio, profile, st.session_state.df_scored)
 
 
-def _portfolio_rationale(portfolio: dict, profile: dict) -> str:
+def _portfolio_rationale(portfolio: dict, profile: dict, n_universe: int = 0) -> str:
     holdings = portfolio["holdings"]
     n = len(holdings)
-    amount = portfolio["total_invested"]
     beta = portfolio.get("portfolio_beta", 1.0)
     port_type = portfolio.get("type", "mixed")
     risk = profile.get("risk_score", 5)
     risk_label = "conservador" if risk <= 3 else "moderado" if risk <= 6 else "agresivo"
     pct_base = portfolio.get("expected_return_pct", 0)
+    opt_method = "minimización de volatilidad" if risk <= 5 else "maximización del índice de Sharpe"
 
-    # Top 3 posiciones por peso
-    top = holdings.head(3)
-
-    # Sector dominante
+    # ── Sector dominante ──────────────────────────────────────────────────────
     if "sector" in holdings.columns:
-        sector_weights = holdings.groupby("sector")["weight"].sum().sort_values(ascending=False)
-        top_sector = sector_weights.index[0] if not sector_weights.empty else "diversificado"
-        top_sector_pct = sector_weights.iloc[0] if not sector_weights.empty else 0
+        sw = holdings.groupby("sector")["weight"].sum().sort_values(ascending=False)
+        top_sector, top_sector_pct = (sw.index[0], sw.iloc[0]) if not sw.empty else ("diversificado", 0)
     else:
         top_sector, top_sector_pct = "diversificado", 0
 
+    # ── Cartera de índices ────────────────────────────────────────────────────
     if port_type == "indices":
-        names = ", ".join(f"{r['name']} ({r['weight']:.0f}%)" for _, r in top.iterrows())
+        parts = []
+        for _, r in holdings.iterrows():
+            ret = r.get("expected_return_annual", 0)
+            parts.append(f"{r['name']} (ticker: {r.get('ticker','')}, ret. histórico ~{ret:.1f}% anual)")
+        names_str = "; ".join(parts)
         avg_ret = holdings["expected_return_annual"].mean() if "expected_return_annual" in holdings.columns else pct_base
         return (
-            f"La cartera está compuesta por {n} ETF{'s' if n > 1 else ''} de gestión pasiva: {names}. "
-            f"Esta estructura ofrece exposición diversificada a miles de empresas con costes muy reducidos, "
-            f"adecuada para un perfil {risk_label}. "
-            f"La rentabilidad histórica media ponderada de estos índices es del {avg_ret:.1f}% anual, "
-            f"con una beta de cartera de {beta:.2f} respecto al mercado global."
+            f"La cartera está compuesta por {n} ETF{'s' if n > 1 else ''} de gestión pasiva: {names_str}. "
+            f"La estrategia de indexación ofrece exposición a miles de empresas simultáneamente con costes muy reducidos, "
+            f"eliminando el riesgo específico de empresa. "
+            f"La rentabilidad histórica media ponderada de estos índices es del {avg_ret:.1f}% anual "
+            f"y la beta de cartera resultante es de {beta:.2f}, "
+            f"{'ligeramente por debajo' if beta < 1 else 'alineada con' if abs(beta-1)<0.05 else 'por encima de'} "
+            f"la referencia del mercado global."
         )
 
-    # Para carteras de acciones o mixtas
-    parts = []
-    for _, r in top.iterrows():
-        name = r.get("name", r.get("ticker", ""))
-        w = r.get("weight", 0)
+    # ── Métricas agregadas (acciones / mixta) ─────────────────────────────────
+    w_col = holdings["weight"] / 100
+
+    avg_mom   = (holdings["mom_12m"]       * w_col).sum() if "mom_12m"       in holdings.columns else 0
+    avg_rev_g = (holdings["revenue_growth"] * w_col).sum() if "revenue_growth" in holdings.columns else 0
+    avg_div   = (holdings["dividend_yield"] * w_col).sum() if "dividend_yield" in holdings.columns else 0
+    pos_mom   = int((holdings["mom_12m"] > 0).sum())       if "mom_12m"       in holdings.columns else 0
+
+    # ── Top 3 posiciones con métricas clave ───────────────────────────────────
+    top3_parts = []
+    for _, r in holdings.head(3).iterrows():
+        name  = r.get("name", r.get("ticker", ""))
+        w     = r.get("weight", 0)
+        mom   = r.get("mom_12m", 0) or 0
         rev_g = r.get("revenue_growth", 0) or 0
-        b = r.get("beta", 1.0) or 1.0
-        reasons = r.get("reasons", [])
-        main_reason = reasons[0] if reasons else f"beta {b:.1f}"
-        parts.append(f"{name} ({w:.0f}%, {main_reason})")
+        b     = r.get("beta", 1.0) or 1.0
+        sign_mom = "+" if mom >= 0 else ""
+        sign_rev = "+" if rev_g >= 0 else ""
+        top3_parts.append(
+            f"**{name}** ({w:.0f}% — mom. 12M: {sign_mom}{mom:.1f}%, "
+            f"crec. ingresos: {sign_rev}{rev_g:.1f}%, β {b:.2f})"
+        )
+    top3_str = "; ".join(top3_parts)
 
-    top_str = "; ".join(parts)
-
-    # Métricas de cartera
-    avg_rev_growth = holdings["revenue_growth"].mean() if "revenue_growth" in holdings.columns else 0
-    avg_beta = holdings["beta"].mean() if "beta" in holdings.columns else beta
-
-    # Contexto de selección
-    preferred_sectors = profile.get("preferred_sectors", [])
+    # ── Contexto de mercado y selección ──────────────────────────────────────
     market_filter = [m for m in profile.get("stock_market_filter", []) if "Cualquier" not in m]
     market_str = f" del {market_filter[0].split('(')[0].strip()}" if len(market_filter) == 1 else ""
+    universe_str = f" analizó {n_universe} candidatos{market_str} y" if n_universe > 0 else f"{market_str}"
 
     sector_str = (
-        f"concentrando el {top_sector_pct:.0f}% en {top_sector}"
+        f"concentra el {top_sector_pct:.0f}% en {top_sector}"
         if top_sector_pct > 35
-        else f"diversificada entre varios sectores con mayor peso en {top_sector} ({top_sector_pct:.0f}%)"
+        else f"distribuye el peso principal en {top_sector} ({top_sector_pct:.0f}%)"
     )
 
+    # ── Nota sobre dividendo (perfil conservador) ─────────────────────────────
+    div_note = f" La rentabilidad por dividendo media ponderada es del {avg_div:.1f}%." if risk <= 4 and avg_div > 0.5 else ""
+
+    # ── Nota mixta ────────────────────────────────────────────────────────────
     idx_note = ""
     if port_type == "mixed":
         idx_pct = portfolio.get("idx_allocation_pct", 50)
-        stock_pct = portfolio.get("stock_allocation_pct", 50)
-        idx_note = f" El {idx_pct}% restante está en ETFs de índice para dar base y reducir volatilidad."
+        idx_note = f" El {idx_pct}% restante se asigna a ETFs de índice para reducir volatilidad y ampliar diversificación."
+
+    sign_mom_avg = "+" if avg_mom >= 0 else ""
+    sign_rev_avg = "+" if avg_rev_g >= 0 else ""
 
     return (
-        f"El algoritmo analizó el universo de empresas{market_str} y seleccionó {n} posiciones "
-        f"optimizando la relación rentabilidad-riesgo para un perfil {risk_label}. "
-        f"Las principales apuestas son: {top_str}. "
-        f"La cartera queda {sector_str}, con un crecimiento medio de ingresos del {avg_rev_growth:.1f}% "
-        f"y una beta ponderada de {avg_beta:.2f} "
-        f"({'por debajo' if avg_beta < 1 else 'por encima'} del mercado). "
-        f"En el escenario base se estima una rentabilidad del {pct_base:.1f}% "
-        f"sobre el horizonte seleccionado.{idx_note}"
+        f"El algoritmo{universe_str} seleccionó {n} posiciones mediante {opt_method} (Markowitz). "
+        f"Las tres principales apuestas son: {top3_str}. "
+        f"A nivel agregado, la cartera {sector_str}, presenta una beta ponderada de **{beta:.2f}** "
+        f"({'por debajo' if beta < 1 else 'por encima'} del mercado), "
+        f"un momentum medio a 12 meses del **{sign_mom_avg}{avg_mom:.1f}%** "
+        f"y un crecimiento de ingresos ponderado del **{sign_rev_avg}{avg_rev_g:.1f}%** "
+        f"({pos_mom} de {n} posiciones con momentum positivo).{div_note} "
+        f"La rentabilidad base estimada es del **{pct_base:.1f}%** sobre el horizonte seleccionado.{idx_note}"
     )
 
 
@@ -684,7 +700,8 @@ def _render_portfolio_proposal(portfolio: dict, profile: dict, df_scored: pd.Dat
         )
 
     # ── Párrafo de justificación ──────────────────────────────────────────────
-    rationale = _portfolio_rationale(portfolio, profile)
+    n_universe = len(df_scored) if df_scored is not None and not df_scored.empty else 0
+    rationale = _portfolio_rationale(portfolio, profile, n_universe)
     st.markdown(
         f'<div class="inv-card" style="margin:8px 0 20px;line-height:1.65;font-size:0.9rem;">'
         f'<span style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;'
