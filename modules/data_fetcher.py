@@ -28,6 +28,36 @@ CANDIDATE_LARGE_CAPS = [
     "RDDT", "HOOD", "COIN", "RBLX",
 ]
 
+IBEX35_TICKERS = [
+    "SAN.MC", "BBVA.MC", "ITX.MC", "IBE.MC", "REP.MC",
+    "TEF.MC", "AMS.MC", "CABK.MC", "BKT.MC", "SAB.MC",
+    "ELE.MC", "ENG.MC", "FER.MC", "ACS.MC", "ANA.MC",
+    "AENA.MC", "CLNX.MC", "GRF.MC", "IAG.MC", "IDR.MC",
+    "LOG.MC", "MAP.MC", "MRL.MC", "NTGY.MC", "PHM.MC",
+    "RED.MC", "SCYR.MC", "SOL.MC", "UNI.MC", "VIS.MC",
+    "ACX.MC", "COL.MC", "FDR.MC", "MEL.MC", "ALM.MC",
+]
+
+NASDAQ100_TICKERS = [
+    "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "AVGO", "COST",
+    "NFLX", "AMD", "ADBE", "QCOM", "INTC", "CSCO", "AMAT", "TXN", "MU", "INTU",
+    "ISRG", "BKNG", "LRCX", "REGN", "PANW", "VRTX", "ADI", "KLAC", "SNPS", "CDNS",
+    "CRWD", "FTNT", "MRVL", "ADP", "DXCM", "ABNB", "BIIB", "IDXX", "GILD", "NXPI",
+    "MNST", "ORLY", "PYPL", "WDAY", "DDOG", "TEAM", "ZS", "PCAR", "FAST", "ROST",
+    "PAYX", "ODFL", "CTAS", "VRSK", "ANSS", "CPRT", "MRNA", "LULU", "CTSH", "GEHC",
+    "ON", "WBD", "TTD", "ILMN", "SPLK", "SIRI", "FSLR", "CEG", "ARM", "SMCI",
+]
+
+EUROSTOXX50_TICKERS = [
+    "ASML.AS", "MC.PA", "SAP.DE", "SIE.DE", "TTE.PA", "ENEL.MI",
+    "BNP.PA", "AXA.PA", "SU.PA", "AIR.PA", "DTE.DE", "ALV.DE",
+    "AI.PA", "OR.PA", "PHIA.AS", "IBE.MC", "SAN.MC", "RMS.PA",
+    "MBG.DE", "MUV2.DE", "ING.AS", "BAYN.DE", "BAS.DE", "BMW.DE",
+    "IFX.DE", "ADS.DE", "ENI.MI", "MRK.DE", "DB1.DE", "PRX.AS",
+    "SGO.PA", "AD.AS", "ISP.MI", "SAFE.PA", "KER.PA", "VOW3.DE",
+    "URW.AS", "CRH.I", "DBK.DE", "NOKIA.HE",
+]
+
 ESG_LOW_SCORE = {"XOM", "CVX", "COP", "MPC", "VLO", "PSX", "HAL", "SLB",
                  "BTI", "MO", "PM", "LMT", "RTX", "NOC", "GD", "BA",
                  "MP", "ALB"}
@@ -187,38 +217,32 @@ def get_index_etf_info() -> dict:
 
 
 def build_universe(profile: dict, max_stocks: int = 80) -> list[str]:
-    sp500 = get_sp500_tickers()
-    sector_map = {
-        "Tecnología": ["Technology", "Information Technology"],
-        "Salud": ["Health Care", "Healthcare"],
-        "Finanzas": ["Financials", "Financial Services"],
-        "Energía": ["Energy"],
-        "Consumo discrecional": ["Consumer Discretionary"],
-        "Consumo básico": ["Consumer Staples"],
-        "Industria": ["Industrials"],
-        "Materiales": ["Materials"],
-        "Servicios públicos": ["Utilities"],
-        "Inmobiliario": ["Real Estate"],
-        "Telecomunicaciones": ["Communication Services"],
-        "Semiconductores": ["Semiconductors", "Technology"],
-        "Inteligencia Artificial": ["Technology"],
-        "Energías renovables": ["Utilities", "Energy"],
-        "Defensa & Aeroespacial": ["Industrials", "Defense"],
-    }
-    preferred_yf_sectors = set()
-    for s in profile.get("preferred_sectors", []):
-        preferred_yf_sectors.update(sector_map.get(s, []))
+    market_filter = profile.get("stock_market_filter", [])
+    # Eliminar el sentinel "Cualquier mercado" para obtener los mercados activos
+    active_markets = [m for m in market_filter if "Cualquier" not in m]
 
-    universe = list(set(sp500[:150] + CANDIDATE_LARGE_CAPS))
+    if not active_markets:
+        # Comportamiento por defecto: S&P 500 + candidatos globales
+        sp500 = get_sp500_tickers()
+        universe = list(set(sp500[:150] + CANDIDATE_LARGE_CAPS))
+    else:
+        universe_set = set()
+        if any("S&P 500" in m for m in active_markets):
+            universe_set.update(get_sp500_tickers())
+        if any("IBEX" in m for m in active_markets):
+            universe_set.update(IBEX35_TICKERS)
+        if any("NASDAQ" in m for m in active_markets):
+            universe_set.update(NASDAQ100_TICKERS)
+        if any("Euro Stoxx" in m for m in active_markets):
+            universe_set.update(EUROSTOXX50_TICKERS)
+        universe = list(universe_set)
 
-    specific = []
+    # Siempre añadir empresas específicas seleccionadas por el usuario
     for s in profile.get("specific_stocks", []):
         if "(" in s:
             ticker = s.split("(")[1].rstrip(")")
-            specific.append(ticker)
-    for t in specific:
-        if t not in universe:
-            universe.append(t)
+            if ticker not in universe:
+                universe.append(ticker)
 
     return universe[:max_stocks]
 

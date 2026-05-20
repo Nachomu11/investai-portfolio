@@ -66,11 +66,12 @@ INDEX_TICKERS = {
     "MSCI Emerging Markets (mercados emergentes)": "EEM",
     "NASDAQ 100 (tecnología EE.UU.)": "QQQ",
     "Euro Stoxx 50 (Europa)": "FEZ",
+    "IBEX 35 (España)": "EWP",
 }
 
 EXPECTED_RETURN_MAP = {
     "SPY": 0.105, "URTH": 0.095, "EEM": 0.11,
-    "QQQ": 0.13, "FEZ": 0.09,
+    "QQQ": 0.13, "FEZ": 0.09, "EWP": 0.085,
 }
 
 
@@ -414,9 +415,10 @@ def build_index_portfolio(profile: dict) -> dict:
 
     if preferred_indices:
         selected = {k: v for k, v in INDEX_TICKERS.items() if k in preferred_indices}
+        # Si ninguna preferencia coincide con el diccionario de tickers, usar selección por riesgo
         if not selected:
-            selected = INDEX_TICKERS
-    else:
+            preferred_indices = []
+    if not preferred_indices:
         if risk <= 3:
             selected = {"S&P 500 (EE.UU., grandes empresas)": "SPY",
                         "MSCI World (global, mercados desarrollados)": "URTH"}
@@ -490,7 +492,10 @@ def build_mixed_portfolio(df_scored: pd.DataFrame, profile: dict) -> dict:
     risk = profile.get("risk_score", 5)
     amount = profile.get("amount", 10000)
 
-    if risk <= 3:
+    custom_stock_pct = profile.get("custom_stock_pct")
+    if custom_stock_pct is not None:
+        idx_pct = 1.0 - (custom_stock_pct / 100.0)
+    elif risk <= 3:
         idx_pct = 0.70
     elif risk <= 6:
         idx_pct = 0.50
