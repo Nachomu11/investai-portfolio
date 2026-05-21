@@ -1177,6 +1177,47 @@ document.addEventListener('touchend', e => {
 });
 
 update();
+
+window.addEventListener('beforeprint', () => {
+  const deck = document.querySelector('.deck');
+  deck.style.position = 'static';
+  deck.style.height = 'auto';
+  deck.style.overflow = 'visible';
+  slides.forEach(s => {
+    s.style.position = 'relative';
+    s.style.inset = 'auto';
+    s.style.opacity = '1';
+    s.style.transform = 'none';
+    s.style.pointerEvents = 'all';
+    s.style.display = 'flex';
+    s.style.width = '100%';
+    s.style.height = '100vh';
+    s.style.boxSizing = 'border-box';
+    s.style.pageBreakAfter = 'always';
+    s.style.breakAfter = 'page';
+  });
+});
+
+window.addEventListener('afterprint', () => {
+  const deck = document.querySelector('.deck');
+  deck.style.position = '';
+  deck.style.height = '';
+  deck.style.overflow = '';
+  slides.forEach(s => {
+    s.style.position = '';
+    s.style.inset = '';
+    s.style.opacity = '';
+    s.style.transform = '';
+    s.style.pointerEvents = '';
+    s.style.display = '';
+    s.style.width = '';
+    s.style.height = '';
+    s.style.boxSizing = '';
+    s.style.pageBreakAfter = '';
+    s.style.breakAfter = '';
+  });
+  update();
+});
 </script>
 </body>
 </html>
