@@ -73,12 +73,12 @@ h1.t{font-family:'Playfair Display',serif;font-size:clamp(40px,5.5vw,70px);
   font-weight:900;line-height:1.04;color:var(--ink);letter-spacing:-.5px}
 h2.t{font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,42px);
   font-weight:700;line-height:1.12;color:var(--ink);letter-spacing:-.3px}
-h3.t{font-family:'Playfair Display',serif;font-size:clamp(15px,1.8vw,22px);font-weight:700;color:var(--ink)}
+h3.t{font-family:'Playfair Display',serif;font-size:clamp(17px,2vw,24px);font-weight:700;color:var(--ink)}
 .div{width:40px;height:2px;background:var(--coral);margin:12px 0 20px;border-radius:1px;transform-origin:left}
 .slide.active .div{animation:ruleIn .5s var(--ease-out) .12s both}
 @keyframes ruleIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-p{font-size:13.5px;line-height:1.72;color:#374151}
-.lead{font-size:15px;line-height:1.65;color:#374151}
+p{font-size:15px;line-height:1.72;color:#374151}
+.lead{font-size:16.5px;line-height:1.65;color:#374151}
 strong{color:var(--ink);font-weight:600}
 em{font-style:italic;color:var(--coral)}
 
@@ -109,7 +109,7 @@ em{font-style:italic;color:var(--coral)}
 .stat-n{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,44px);
   font-weight:900;color:var(--coral);letter-spacing:-.5px;line-height:1}
 .stat-n.gold{color:var(--gold)}.stat-n.green{color:var(--green)}.stat-n.navy{color:var(--navy)}
-.stat-l{font-size:11px;color:var(--muted);margin-top:5px}
+.stat-l{font-size:12.5px;color:var(--muted);margin-top:5px}
 
 /* ── Bullet ───────────────────────────────────────────────── */
 .bul{display:flex;align-items:flex-start;gap:12px;margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--border)}
@@ -117,12 +117,12 @@ em{font-style:italic;color:var(--coral)}
 .bul-ico{flex-shrink:0;margin-top:2px;width:16px;height:16px;
   stroke:var(--coral);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .bul-ico.gold{stroke:var(--gold)}.bul-ico.green{stroke:var(--green)}.bul-ico.sky{stroke:var(--sky)}
-.bt{font-size:13.5px;line-height:1.6;color:#374151}
+.bt{font-size:15px;line-height:1.6;color:#374151}
 .bt strong{color:var(--ink)}
 
 /* ── Module row ───────────────────────────────────────────── */
 .mod{display:flex;align-items:center;gap:12px;padding:9px 0;
-  border-bottom:1px solid var(--border);font-size:13px;color:#374151}
+  border-bottom:1px solid var(--border);font-size:14.5px;color:#374151}
 .mod:last-child{border-bottom:none}
 .mod-ico{flex-shrink:0;width:16px;height:16px;
   stroke:var(--coral);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -197,6 +197,22 @@ img{max-width:100%;height:auto;display:block}
 /* screen frame */
 .sframe{border-radius:12px;overflow:hidden;box-shadow:var(--s3)}
 .sframe img{width:100%;height:auto;display:block}
+
+@media print{
+  @page{size:landscape;margin:0}
+  body{background:none}
+  .ticker-wrap,.nav,.counter{display:none!important}
+  .deck{position:static;width:100%;height:auto;overflow:visible}
+  .slide{
+    position:relative!important;inset:auto!important;
+    opacity:1!important;transform:none!important;pointer-events:all!important;
+    display:flex!important;width:100%;height:100vh;
+    box-sizing:border-box;page-break-after:always;break-after:page;
+    background:var(--cream);
+  }
+  .slide.dark-slide{background:var(--ink)!important}
+  .animate{opacity:1!important;transform:none!important}
+}
 </style>
 </head>
 <body>
@@ -323,6 +339,10 @@ img{max-width:100%;height:auto;display:block}
       <h3 class="t">Robo-Advisors</h3>
       <p style="font-size:11px;color:var(--amber);font-weight:600;letter-spacing:1px">VANGUARD · INDEXA CAPITAL</p>
       <p>Gestión pasiva de ETFs. Sin personalización conductual. Sin análisis geopolítico.</p>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:8px 0">
+        <img src="vanguard.png" alt="Vanguard" style="height:40px;width:auto;object-fit:contain">
+        <img src="image.png" alt="Indexa Capital" style="height:40px;width:auto;object-fit:contain">
+      </div>
       <span class="badge b-coral">Sin personalización</span>
     </div>
     <div class="card" style="display:flex;flex-direction:column;gap:10px">
@@ -330,13 +350,20 @@ img{max-width:100%;height:auto;display:block}
       <h3 class="t">Terminales Pro</h3>
       <p style="font-size:11px;color:var(--amber);font-weight:600;letter-spacing:1px">BLOOMBERG TERMINAL</p>
       <p>Datos institucionales en tiempo real. Barrera: <strong>~$25.000/año</strong> por licencia.</p>
+      <div style="padding:8px 0">
+        <img src="bloomberg.png" alt="Bloomberg" style="height:40px;width:auto;object-fit:contain">
+      </div>
       <span class="badge b-coral">Coste prohibitivo</span>
     </div>
     <div class="card" style="display:flex;flex-direction:column;gap:10px">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--navy2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <h3 class="t">Social Trading</h3>
-      <p style="font-size:11px;color:var(--amber);font-weight:600;letter-spacing:1px">ETORO</p>
+      <p style="font-size:11px;color:var(--amber);font-weight:600;letter-spacing:1px">ETORO · TRADING 212</p>
       <p>Copiar estrategias de expertos. Sin análisis cuantitativo ni gestión de riesgo geopolítico.</p>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:8px 0">
+        <img src="etoro.png" alt="eToro" style="height:40px;width:auto;object-fit:contain">
+        <img src="trading212.png" alt="Trading 212" style="height:40px;width:auto;object-fit:contain;background:#111;border-radius:6px;padding:3px 8px">
+      </div>
       <span class="badge b-coral">Sin análisis propio</span>
     </div>
   </div>
@@ -351,33 +378,36 @@ img{max-width:100%;height:auto;display:block}
   <h2 class="t animate">InvestAI ocupa el nicho que <em>ninguno cubre</em></h2>
   <div class="div animate"></div>
   <div class="sframe animate" style="flex:1;margin-top:8px;overflow:hidden">
-    <img src="Tabla comparativa.png" alt="Tabla comparativa" style="width:100%;height:100%;object-fit:contain;object-position:top center">
+    <img src="PHOTO-2026-05-21-20-23-19 (1).jpg" alt="Tabla comparativa" style="width:100%;height:100%;object-fit:contain;object-position:top center">
   </div>
 </div>
 
 <!-- ══ 5. ALCANCE ══════════════════════════════════════════ -->
 <div class="slide" id="s5">
   <span class="tag animate">Alcance del Proyecto</span>
-  <h2 class="t animate">Sistema <em>end-to-end</em> · 8 módulos funcionales</h2>
+  <h2 class="t animate" style="font-size:clamp(36px,5.5vw,68px);font-weight:900;letter-spacing:-1px">ALCANCE</h2>
   <div class="div animate"></div>
-  <div class="g2 animate" style="flex:1;gap:28px;margin-top:4px">
+  <p class="animate" style="font-size:14.5px;color:#374151;line-height:1.65;margin-bottom:16px;max-width:820px">
+    Modelo de machine learning que transforma datos brutos de índices globales, como <strong>S&amp;P 500</strong> y el <strong>MSCI World</strong>, en decisiones estratégicas para la gestión activa de una cartera de inversión a través de un <strong>dashboard operativo en tiempo real</strong> con una implementación de <strong>riesgo geopolítico</strong>.
+  </p>
+  <div class="g2 animate" style="flex:1;gap:28px">
     <div>
-      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div><strong>Perfilado del inversor</strong> — Cuestionario conductual y financiero</div></div>
-      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div><strong>Ingesta de datos</strong> — yfinance, Wikipedia, Google News RSS</div></div>
-      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><div><strong>Scoring multi-factor</strong> — 7 dimensiones de análisis</div></div>
-      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div><strong>Optimizador Markowitz</strong> — Mínima varianza / máximo Sharpe</div></div>
+      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div style="font-size:14px"><strong>Perfilado del inversor</strong> — Cuestionario conductual y financiero</div></div>
+      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div style="font-size:14px"><strong>Ingesta de datos</strong> — yfinance, Wikipedia, Google News RSS</div></div>
+      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><div style="font-size:14px"><strong>Scoring multi-factor</strong> — 7 dimensiones de análisis</div></div>
+      <div class="mod"><svg class="mod-ico" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div style="font-size:14px"><strong>Optimizador Markowitz</strong> — Mínima varianza / máximo Sharpe</div></div>
     </div>
     <div>
-      <div class="mod"><svg class="mod-ico gold" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><div><strong>Escenarios de rentabilidad</strong> — Bear / Base / Bull calibrados</div></div>
-      <div class="mod"><svg class="mod-ico gold" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div><strong>Gestión de carteras</strong> — Guardar, duplicar, comparar</div></div>
-      <div class="mod"><svg class="mod-ico green" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><div><strong>Dashboard en vivo</strong> — Seguimiento con precios reales de mercado</div></div>
-      <div class="mod"><svg class="mod-ico green" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div><strong>Backtesting histórico</strong> — 9 métricas vs S&amp;P 500 e IBEX 35</div></div>
+      <div class="mod"><svg class="mod-ico gold" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><div style="font-size:14px"><strong>Escenarios de rentabilidad</strong> — Bear / Base / Bull calibrados</div></div>
+      <div class="mod"><svg class="mod-ico gold" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div style="font-size:14px"><strong>Gestión de carteras</strong> — Guardar, duplicar, comparar</div></div>
+      <div class="mod"><svg class="mod-ico green" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><div style="font-size:14px"><strong>Dashboard en vivo</strong> — Seguimiento con precios reales de mercado</div></div>
+      <div class="mod"><svg class="mod-ico green" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div style="font-size:14px"><strong>Backtesting histórico</strong> — 9 métricas vs S&amp;P 500 e IBEX 35</div></div>
     </div>
   </div>
   <div class="g3 animate" style="gap:12px;margin-top:14px">
-    <div class="card stat"><div class="stat-n">€0</div><div class="stat-l">Coste operativo total</div></div>
-    <div class="card stat"><div class="stat-n navy">&lt;5s</div><div class="stat-l">Latencia máxima de análisis</div></div>
-    <div class="card stat"><div class="stat-n green">99.9%</div><div class="stat-l">Disponibilidad objetivo</div></div>
+    <div class="card stat"><div class="stat-n">€0</div><div class="stat-l" style="font-size:13px">Coste operativo total</div></div>
+    <div class="card stat"><div class="stat-n navy">&lt;5s</div><div class="stat-l" style="font-size:13px">Latencia máxima de análisis</div></div>
+    <div class="card stat"><div class="stat-n green">99.9%</div><div class="stat-l" style="font-size:13px">Disponibilidad objetivo</div></div>
   </div>
 </div>
 
@@ -613,73 +643,84 @@ img{max-width:100%;height:auto;display:block}
 
 <!-- ══ 13a. FUNDAMENTO MATEMÁTICO — PERFILADO Y SCORING ══════ -->
 <div class="slide" id="s13">
-  <span class="tag animate">Fundamento Matemático · 1 / 2</span>
+  <span class="tag animate">Fundamento del Modelo · 1 / 2</span>
   <h2 class="t animate">Perfilado del inversor y <em>scoring multi-factor</em></h2>
   <div class="div animate"></div>
   <div class="g2 animate" style="flex:1;gap:24px;margin-top:8px">
-    <div class="card" style="display:flex;flex-direction:column;gap:10px">
-      <p style="font-size:10px;color:var(--coral);font-weight:700;letter-spacing:2px">PERFIL DE RIESGO CONSOLIDADO</p>
-      <div class="eq">$$r^* = \mathrm{clip}\!\left(r_{\mathrm{raw}} + \Delta_{dd},\; 1,\; 10\right)$$</div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;padding:4px 0">
-        <span style="color:var(--coral);font-weight:700">\(\Delta_{dd}=-2\)</span><span style="color:var(--muted)">Vende todo ante caída del 20% — pánico</span>
-        <span style="color:var(--amber);font-weight:700">\(\Delta_{dd}=-1\)</span><span style="color:var(--muted)">Reduce posición parcialmente</span>
-        <span style="color:var(--muted);font-weight:700">\(\Delta_{dd}=\phantom{+}0\)</span><span style="color:var(--muted)">Mantiene disciplina — sin cambios</span>
-        <span style="color:var(--green);font-weight:700">\(\Delta_{dd}=+2\)</span><span style="color:var(--muted)">Compra en la caída — perfil oportunista</span>
-      </div>
-      <p style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding-top:4px;border-top:1px solid var(--border)">Probabilidad de inclusión en índices</p>
-      <div class="eq">$$P(i) = \min\!\left(0.85,\;\; 0.30 + \frac{m_i}{200}\cdot 0.30 + \frac{\mu_i^{12M}}{100}\cdot 0.25\right)$$</div>
-      <p style="font-size:12px;color:var(--muted)">Si \(m_i \geq C_{\min,j}\) y margen neto \(\pi_i > 0\). Para miembros actuales del índice: etiqueta estática «Actualmente en el índice».</p>
+    <div>
+      <p style="font-size:10px;color:var(--coral);font-weight:700;letter-spacing:2px;margin-bottom:10px">VARIABLES QUE DEFINE EL INVERSOR</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:var(--warm)">
+            <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--navy);border-bottom:2px solid var(--border)">Variable</th>
+            <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--navy);border-bottom:2px solid var(--border)">Qué captura</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 10px;font-weight:600;color:var(--coral)">Tolerancia al riesgo</td><td style="padding:7px 10px;color:var(--muted)">Escala del 1 (conservador) al 10 (agresivo)</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:#fafaf8"><td style="padding:7px 10px;font-weight:600;color:var(--coral)">Reacción ante caídas</td><td style="padding:7px 10px;color:var(--muted)">Ajuste conductual: pánico → oportunista</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 10px;font-weight:600;color:var(--navy)">Capital inicial</td><td style="padding:7px 10px;color:var(--muted)">Dinero disponible para invertir (€)</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:#fafaf8"><td style="padding:7px 10px;font-weight:600;color:var(--navy)">Aportación mensual</td><td style="padding:7px 10px;color:var(--muted)">Cantidad a añadir cada mes — DCA (€)</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 10px;font-weight:600;color:var(--navy)">Horizonte temporal</td><td style="padding:7px 10px;color:var(--muted)">Años que se mantiene la inversión</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:#fafaf8"><td style="padding:7px 10px;font-weight:600;color:var(--amber)">Sectores preferidos</td><td style="padding:7px 10px;color:var(--muted)">Tecnología, salud, energía...</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 10px;font-weight:600;color:var(--amber)">Índices de interés</td><td style="padding:7px 10px;color:var(--muted)">S&amp;P 500, IBEX 35, MSCI World...</td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:#fafaf8"><td style="padding:7px 10px;font-weight:600;color:var(--green)">Criterio ESG</td><td style="padding:7px 10px;color:var(--muted)">Filtro de sostenibilidad y ética</td></tr>
+          <tr><td style="padding:7px 10px;font-weight:600;color:var(--green)">Tipo de inversión</td><td style="padding:7px 10px;color:var(--muted)">Solo acciones, índices/ETFs o combinación</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="card" style="display:flex;flex-direction:column;gap:10px">
-      <p style="font-size:10px;color:var(--gold);font-weight:700;letter-spacing:2px">SCORE MULTI-FACTOR — 7 DIMENSIONES</p>
-      <div class="eq">$$s_i = f_{\text{cap}} + f_{\text{calidad}} + f_{\text{mom}}(\mu_i^{12M}) + f_{\text{val}}(\text{PER}) + f_{\text{sector}} + f_{\text{perfil}} + f_{\text{riesgo}}(\beta_i, r^*)$$</div>
-      <p style="font-size:12px;color:#374151">El factor de momentum se evalúa sobre la rentabilidad acumulada a 12 meses:</p>
-      <div style="background:#fdf6e3;border-radius:6px;padding:10px 14px;font-size:11.5px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px">
-        <span style="color:var(--green);font-weight:700">+18 pts</span><span style="color:var(--muted)">si \(\mu_i^{12M} > 30\%\)</span>
-        <span style="color:var(--green);font-weight:700">+12 pts</span><span style="color:var(--muted)">si \(\mu_i^{12M} \in (15\%, 30\%]\)</span>
-        <span style="color:var(--amber);font-weight:700">+5 pts</span><span style="color:var(--muted)">si \(\mu_i^{12M} \in (0\%, 15\%]\)</span>
-        <span style="color:var(--coral);font-weight:700">−5 pts</span><span style="color:var(--muted)">si \(\mu_i^{12M} \leq 0\)</span>
+    <div class="card" style="display:flex;flex-direction:column;gap:9px">
+      <p style="font-size:10px;color:var(--coral);font-weight:700;letter-spacing:2px">PERFIL DE RIESGO CONSOLIDADO</p>
+      <div class="eq">$$r^* = \mathrm{clip}(r_{\text{raw}} + \Delta_{dd},\; 1,\; 10)$$</div>
+      <p style="font-size:10px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-top:2px">SCORING MULTI-FACTOR — 7 DIMENSIONES</p>
+      <div class="eq" style="font-size:.82em">$$s_i = f_{\text{cap}} + f_{\text{calidad}} + f_{\text{mom}} + f_{\text{val}} + f_{\text{sector}} + f_{\text{perfil}} + f_{\text{riesgo}}$$</div>
+      <div class="bul"><svg class="bul-ico gold" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Momentum (20%)</strong> — Rentabilidad acumulada a 12 meses. Segundo factor más relevante</p></div>
+      <div class="bul"><svg class="bul-ico gold" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Valoración (PER)</strong> — Si la empresa cotiza cara o barata respecto a su sector</p></div>
+      <div class="bul"><svg class="bul-ico" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Sector</strong> — Coincidencia con preferencias del inversor (+15 puntos)</p></div>
+      <div class="bul"><svg class="bul-ico green" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Beta</strong> — Volatilidad relativa al índice de referencia</p></div>
+      <div style="margin-top:2px;padding:10px 14px;background:#fdf6e3;border-radius:8px;border-left:3px solid var(--gold);font-size:13px;color:#374151">
+        Las puntuaciones se normalizan y combinan en una nota final ponderada que decide qué empresas entran a la cartera.
       </div>
-      <p style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding-top:4px;border-top:1px solid var(--border)">Puntuación compuesta ponderada</p>
-      <div class="eq">$$\hat{s}_i = 0.50\,\tilde{s}^{\text{score}} + 0.20\,\tilde{s}^{\mu^{12M}} + 0.15\,\tilde{s}^{g^{\text{rev}}} + 0.10\,\tilde{s}^{\text{margen}} + 0.05\,\tilde{s}^{m}$$</div>
-      <p style="font-size:12.5px;color:#374151">El momentum pondera un <strong>20%</strong> — segunda componente más relevante del modelo, solo por detrás del score base.</p>
     </div>
   </div>
 </div>
 
 <!-- ══ 13b. FUNDAMENTO MATEMÁTICO — MARKOWITZ Y DCA ══════════ -->
 <div class="slide" id="s13b">
-  <span class="tag animate">Fundamento Matemático · 2 / 2</span>
+  <span class="tag animate">Fundamento del Modelo · 2 / 2</span>
   <h2 class="t animate">Optimización de <em>Markowitz</em> y proyección <em>DCA</em></h2>
   <div class="div animate"></div>
   <div class="g2 animate" style="flex:1;gap:24px;margin-top:8px">
-    <div class="card" style="display:flex;flex-direction:column;gap:12px">
-      <p style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:2px">OPTIMIZACIÓN MEDIA–VARIANZA (MARKOWITZ)</p>
-      <p style="font-size:12.5px;color:#374151">El optimizador selecciona la función objetivo según el perfil de riesgo consolidado \(r^*\):</p>
-      <div style="background:#f0fdf7;border-radius:8px;padding:14px 16px">
-        <p style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:1.5px;margin-bottom:8px">CONSERVADOR / MODERADO — \(r^* &lt; 6\) — minimizar riesgo</p>
-        <div class="eq" style="margin:0">$$\mathbf{w}^* = \arg\min_{\mathbf{w}}\;\mathbf{w}^\top\boldsymbol{\Sigma}\,\mathbf{w} \quad \text{s.a.}\;\textstyle\sum w_i = 1,\; w_{\min} \leq w_i \leq w_{\max}$$</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:11px">
+      <p style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:2px">OPTIMIZADOR DE CARTERA — MARKOWITZ</p>
+      <p style="font-size:13px;color:#374151">El sistema elige automáticamente la combinación de activos que mejor encaja con el perfil del inversor, buscando el mayor rendimiento posible para el mínimo riesgo asumido.</p>
+      <div style="background:#f0fdf7;border-radius:8px;padding:12px 14px">
+        <p style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">CONSERVADOR / MODERADO — minimizar riesgo</p>
+        <div class="eq" style="margin:0;background:transparent;border:none;padding:4px 0">$$\mathbf{w}^* = \arg\min_{\mathbf{w}}\;\mathbf{w}^\top\boldsymbol{\Sigma}\,\mathbf{w}$$</div>
       </div>
-      <div style="background:#f0f6ff;border-radius:8px;padding:14px 16px">
-        <p style="font-size:10px;color:var(--sky);font-weight:700;letter-spacing:1.5px;margin-bottom:8px">AGRESIVO — \(r^* \geq 6\) — maximizar Ratio de Sharpe</p>
-        <div class="eq" style="margin:0">$$\mathbf{w}^* = \arg\max_{\mathbf{w}}\;\frac{\mathbf{w}^\top\boldsymbol{\mu}\cdot 252 - r_f}{\sqrt{\mathbf{w}^\top\boldsymbol{\Sigma}\,\mathbf{w}\cdot 252}}$$</div>
+      <div style="background:#f0f6ff;border-radius:8px;padding:12px 14px">
+        <p style="font-size:10px;color:var(--sky);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">AGRESIVO — maximizar Ratio de Sharpe</p>
+        <div class="eq" style="margin:0;background:transparent;border:none;padding:4px 0">$$\mathbf{w}^* = \arg\max_{\mathbf{w}}\;\frac{\mathbf{w}^\top\boldsymbol{\mu} - r_f}{\sqrt{\mathbf{w}^\top\boldsymbol{\Sigma}\,\mathbf{w}}}$$</div>
       </div>
-      <p style="font-size:12px;color:var(--muted)">Solver numérico: <strong>SLSQP</strong> (scipy.optimize) &nbsp;·&nbsp; \(r_f = 4.3\%\) &nbsp;·&nbsp; Límites: conservador [2%–20%], moderado [2%–25%], agresivo [2%–35%]</p>
+      <div class="bul"><svg class="bul-ico" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Límites por posición</strong> — Conservador: 2–20% · Moderado: 2–25% · Agresivo: 2–35%</p></div>
+      <div class="bul"><svg class="bul-ico gold" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Sin cajas negras</strong> — el sistema justifica cada peso asignado con datos reales</p></div>
+      <div style="padding:10px 14px;background:#f8f4ef;border-radius:8px;font-size:13px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px">
+        <strong style="color:var(--green)">10 posiciones</strong><span style="color:var(--muted)">seleccionadas del IBEX 35</span>
+        <strong style="color:var(--sky)">Beta 0.51</strong><span style="color:var(--muted)">muy defensiva — mitad de volatilidad del mercado</span>
+        <strong style="color:var(--amber)">Endesa 31.5%</strong><span style="color:var(--muted)">mayor peso — sector utilities defensivo</span>
+      </div>
     </div>
-    <div class="card" style="display:flex;flex-direction:column;gap:12px">
-      <p style="font-size:10px;color:var(--coral);font-weight:700;letter-spacing:2px">PROYECCIÓN CON APORTACIONES PERIÓDICAS (DCA)</p>
-      <p style="font-size:12.5px;color:#374151">El sistema proyecta el valor final de la cartera combinando la capitalización del capital inicial con las aportaciones mensuales recurrentes \(c\):</p>
+    <div class="card" style="display:flex;flex-direction:column;gap:11px">
+      <p style="font-size:10px;color:var(--coral);font-weight:700;letter-spacing:2px">APORTACIONES MENSUALES — DCA</p>
+      <p style="font-size:13px;color:#374151">Además del capital inicial, el inversor puede programar aportaciones mensuales. El sistema calcula su impacto real sobre el valor final de la cartera:</p>
       <div class="eq">$$V_{\text{DCA}}(n) = A\cdot(1+r_m)^n + c\cdot\frac{(1+r_m)^n - 1}{r_m}$$</div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;background:#f8f4ef;border-radius:8px;padding:12px 14px">
-        <span style="color:var(--navy);font-weight:600">\(A\)</span><span style="color:var(--muted)">Capital inicial (€100.000 en el caso práctico)</span>
-        <span style="color:var(--navy);font-weight:600">\(c\)</span><span style="color:var(--muted)">Aportación mensual (€400/mes)</span>
-        <span style="color:var(--navy);font-weight:600">\(n\)</span><span style="color:var(--muted)">Número de meses del horizonte (\(n = 12T\))</span>
-        <span style="color:var(--navy);font-weight:600">\(r_m\)</span><span style="color:var(--muted)">Tasa mensual: \(r_m = (1+r_{\text{base}})^{1/12}-1\)</span>
-      </div>
-      <div class="g3" style="gap:10px;margin-top:4px">
-        <div class="card stat" style="padding:12px"><div class="stat-n" style="font-size:20px">€139.470</div><div class="stat-l">Sin DCA (solo capital inicial)</div></div>
-        <div class="card stat" style="padding:12px"><div class="stat-n green" style="font-size:20px">€167.866</div><div class="stat-l">Con €400/mes durante 60 meses</div></div>
-        <div class="card stat" style="padding:12px"><div class="stat-n gold" style="font-size:20px">+€28.395</div><div class="stat-l">Ganancia extra generada por el DCA</div></div>
+      <div class="bul"><svg class="bul-ico" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>\(A\)</strong> capital inicial · <strong>\(c\)</strong> aportación mensual · <strong>\(r_m\)</strong> rentabilidad mensual · <strong>\(n\)</strong> meses</p></div>
+      <div class="bul"><svg class="bul-ico green" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Cada aportación mensual</strong> se reinvierte y genera rendimiento adicional con interés compuesto</p></div>
+      <div class="bul"><svg class="bul-ico gold" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p class="bt"><strong>Tres escenarios</strong> — Bear, Base y Bull — calibrados con datos históricos reales</p></div>
+      <div class="g3" style="gap:10px;margin-top:8px">
+        <div class="card stat" style="padding:12px"><div class="stat-n" style="font-size:20px">€139.470</div><div class="stat-l">Sin aportar mensualmente</div></div>
+        <div class="card stat" style="padding:12px"><div class="stat-n green" style="font-size:20px">€167.866</div><div class="stat-l">Con €400/mes · 5 años</div></div>
+        <div class="card stat" style="padding:12px"><div class="stat-n gold" style="font-size:20px">+€28.395</div><div class="stat-l">Ganancia extra del DCA</div></div>
       </div>
     </div>
   </div>
@@ -692,6 +733,57 @@ img{max-width:100%;height:auto;display:block}
   <div class="div animate"></div>
   <div class="sframe animate" style="flex:1;margin-top:8px;overflow:hidden">
     <img src="Captura de pantalla 2026-05-20 221149.png" alt="Inicio" style="width:100%;height:100%;object-fit:contain;object-position:top center">
+  </div>
+</div>
+
+<!-- ══ 14b. ARQUITECTURA DEL SOFTWARE ════════════════════════ -->
+<div class="slide" id="s14b">
+  <span class="tag animate">Arquitectura del Software</span>
+  <h2 class="t animate">Cómo está construido <em>por dentro</em></h2>
+  <div class="div animate"></div>
+  <div class="g2 animate" style="flex:1;gap:24px;margin-top:8px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <p style="font-size:10px;color:var(--coral);font-weight:700;letter-spacing:2px">FLUJO DE DATOS — DE LA ENTRADA AL RESULTADO</p>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--warm);border-radius:8px;padding:10px 14px">
+          <div style="background:var(--coral);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div>
+          <div><strong style="font-size:13px">Cuestionario del inversor</strong><br><span style="font-size:12px;color:var(--muted)">Recoge 9 variables del perfil → genera vector de preferencias</span></div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:var(--coral)">↓</div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--warm);border-radius:8px;padding:10px 14px">
+          <div style="background:var(--amber);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div>
+          <div><strong style="font-size:13px">Ingesta de datos (yfinance + Google News)</strong><br><span style="font-size:12px;color:var(--muted)">Descarga asíncrona de precios, fundamentales y noticias en paralelo</span></div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:var(--coral)">↓</div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--warm);border-radius:8px;padding:10px 14px">
+          <div style="background:var(--gold);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div>
+          <div><strong style="font-size:13px">Motor de scoring</strong><br><span style="font-size:12px;color:var(--muted)">Puntúa y ordena las empresas del universo según 7 factores</span></div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:var(--coral)">↓</div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--warm);border-radius:8px;padding:10px 14px">
+          <div style="background:var(--green);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</div>
+          <div><strong style="font-size:13px">Optimizador Markowitz + escenarios</strong><br><span style="font-size:12px;color:var(--muted)">Calcula pesos óptimos y simula Bear / Base / Bull</span></div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:var(--coral)">↓</div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--warm);border-radius:8px;padding:10px 14px">
+          <div style="background:var(--sky);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">5</div>
+          <div><strong style="font-size:13px">Dashboard Streamlit</strong><br><span style="font-size:12px;color:var(--muted)">Muestra la cartera, el seguimiento en vivo y el backtesting</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <p style="font-size:10px;color:var(--gold);font-weight:700;letter-spacing:2px">MÓDULOS PRINCIPALES DEL CÓDIGO</p>
+      <div class="card-l" style="font-size:13px"><strong>investor_profile.py</strong> <span style="color:var(--muted)">— Cuestionario y cálculo de r*</span></div>
+      <div class="card-l" style="font-size:13px"><strong>data_fetcher.py</strong> <span style="color:var(--muted)">— Descarga paralela de datos (8 workers)</span></div>
+      <div class="card-l gold" style="font-size:13px"><strong>scoring_engine.py</strong> <span style="color:var(--muted)">— Scoring multi-factor y normalización</span></div>
+      <div class="card-l green" style="font-size:13px"><strong>portfolio_optimizer.py</strong> <span style="color:var(--muted)">— Markowitz con SLSQP (scipy)</span></div>
+      <div class="card-l sky" style="font-size:13px"><strong>geopolitical_risk.py</strong> <span style="color:var(--muted)">— NLP sobre Google News RSS</span></div>
+      <div class="card-l" style="font-size:13px"><strong>backtesting.py</strong> <span style="color:var(--muted)">— 9 métricas históricas vs benchmarks</span></div>
+      <div class="card-l gold" style="font-size:13px"><strong>dashboard.py</strong> <span style="color:var(--muted)">— Interfaz Streamlit y seguimiento en vivo</span></div>
+      <div style="margin-top:8px;padding:12px 14px;background:#f0fdf7;border-radius:8px;border-left:3px solid var(--green);font-size:13px;color:#374151">
+        Todo el código es <strong>100% Python</strong>, open source y sin dependencias de pago. Cualquier inversor puede ejecutarlo localmente desde su ordenador.
+      </div>
+    </div>
   </div>
 </div>
 
