@@ -206,21 +206,17 @@ img{max-width:100%;height:auto;display:block}
 .sframe{border-radius:12px;overflow:hidden;box-shadow:var(--s3)}
 .sframe img{width:100%;height:auto;display:block}
 
-@media print{
-  @page{size:landscape;margin:0}
-  body{background:none}
-  .ticker-wrap,.nav,.counter,.pdf-btn,.ctr{display:none!important}
-  .deck{position:static;width:100%;height:auto;overflow:visible}
-  .slide{
-    position:relative!important;inset:auto!important;
-    opacity:1!important;transform:none!important;pointer-events:all!important;
-    display:flex!important;width:100%;height:100vh;
-    box-sizing:border-box;page-break-after:always;break-after:page;
-    background:var(--cream);
-  }
-  .slide.dark-slide{background:var(--ink)!important}
-  .animate{opacity:1!important;transform:none!important}
+@page{size:landscape;margin:0}
+body.printing .deck{position:static!important;height:auto!important;overflow:visible!important}
+body.printing .slide{
+  position:relative!important;inset:auto!important;
+  opacity:1!important;transform:none!important;pointer-events:all!important;
+  display:flex!important;width:100%!important;height:100vh!important;
+  box-sizing:border-box!important;page-break-after:always!important;break-after:page!important;
 }
+body.printing .slide.dark-slide{background:var(--ink)!important}
+body.printing .animate{opacity:1!important;transform:none!important}
+body.printing .ticker-wrap,body.printing .nav,body.printing .ctr,body.printing .pdf-btn{display:none!important}
 </style>
 </head>
 <body>
@@ -267,7 +263,7 @@ img{max-width:100%;height:auto;display:block}
 <button class="nav" id="prev" onclick="go(-1)">&#8249;</button>
 <button class="nav" id="next" onclick="go(1)">&#8250;</button>
 <div class="ctr" id="ctr"></div>
-<button class="pdf-btn" onclick="window.print()">
+<button class="pdf-btn" onclick="printPDF()">
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
   PDF
 </button>
@@ -1178,46 +1174,13 @@ document.addEventListener('touchend', e => {
 
 update();
 
-window.addEventListener('beforeprint', () => {
-  const deck = document.querySelector('.deck');
-  deck.style.position = 'static';
-  deck.style.height = 'auto';
-  deck.style.overflow = 'visible';
-  slides.forEach(s => {
-    s.style.position = 'relative';
-    s.style.inset = 'auto';
-    s.style.opacity = '1';
-    s.style.transform = 'none';
-    s.style.pointerEvents = 'all';
-    s.style.display = 'flex';
-    s.style.width = '100%';
-    s.style.height = '100vh';
-    s.style.boxSizing = 'border-box';
-    s.style.pageBreakAfter = 'always';
-    s.style.breakAfter = 'page';
-  });
-});
-
-window.addEventListener('afterprint', () => {
-  const deck = document.querySelector('.deck');
-  deck.style.position = '';
-  deck.style.height = '';
-  deck.style.overflow = '';
-  slides.forEach(s => {
-    s.style.position = '';
-    s.style.inset = '';
-    s.style.opacity = '';
-    s.style.transform = '';
-    s.style.pointerEvents = '';
-    s.style.display = '';
-    s.style.width = '';
-    s.style.height = '';
-    s.style.boxSizing = '';
-    s.style.pageBreakAfter = '';
-    s.style.breakAfter = '';
-  });
-  update();
-});
+function printPDF() {
+  document.body.classList.add('printing');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => document.body.classList.remove('printing'), 1000);
+  }, 350);
+}
 </script>
 </body>
 </html>
